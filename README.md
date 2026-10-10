@@ -146,7 +146,7 @@ The actual response schema and streaming format depend on the backend implementa
 
 **Sachin Kumar**
 
-GitHub: [@YOUR_USERNAME](https://github.com/sachinydv0002/)
+GitHub: [sachinydv0002](https://github.com/sachinydv0002/)
 
 ---
 
