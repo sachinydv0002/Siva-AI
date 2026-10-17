@@ -24,8 +24,33 @@ import {
   Sun,
   Moon,
   Pencil,
+  Pin,
+  Trash2,
+  MoreHorizontal,
+  RotateCcw,
 } from 'lucide-react'
 import './App.css'
+
+
+function TrishulMark({ size = 23, strokeWidth = 1.8 }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 32 32"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M16 29V9" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+      <path d="M16 16C11.5 16 8.2 12.8 8.2 7.4C12.8 8.4 15.1 11.3 16 16Z" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M16 16C20.5 16 23.8 12.8 23.8 7.4C19.2 8.4 16.9 11.3 16 16Z" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M16 9C12.8 7 12.4 4.6 16 2C19.6 4.6 19.2 7 16 9Z" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M11.5 29H20.5" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+    </svg>
+  )
+}
 
 const API_URL = 'http://127.0.0.1:8000/api/chat/stream'
 const SIDEBAR_STORAGE_KEY = 'siva-ai-nav-expanded'
@@ -74,6 +99,10 @@ function App() {
   const [activeView, setActiveView] = useState('chat')
   const [renameOpen, setRenameOpen] = useState(false)
   const [renameDraft, setRenameDraft] = useState('')
+  const [renameChatId, setRenameChatId] = useState(null)
+  const [deleteChatId, setDeleteChatId] = useState(null)
+  const [openChatMenuId, setOpenChatMenuId] = useState(null)
+  const [chatMenuPosition, setChatMenuPosition] = useState({ top: 0, right: 12 })
 
   const textareaRef = useRef(null)
   const messagesContainerRef = useRef(null)
@@ -94,6 +123,9 @@ function App() {
       if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
         setSocialOpen(false)
         setAccountOpen(false)
+      }
+      if (!event.target.closest?.('.chat-history-wrap')) {
+        setOpenChatMenuId(null)
       }
     }
     document.addEventListener('pointerdown', closeMenusOnOutsideClick)
@@ -199,21 +231,53 @@ function App() {
     }
   }
 
-  function openRenameDialog() {
-    if (!activeChat) return
-    setRenameDraft(activeChat.title)
+  function openRenameDialog(chat = activeChat) {
+    if (!chat) return
+    setRenameChatId(chat.id)
+    setRenameDraft(chat.title)
     setRenameOpen(true)
   }
 
   function saveChatRename(event) {
     event?.preventDefault()
-    if (!activeChat || !renameDraft.trim()) return
+    if (!renameChatId || !renameDraft.trim()) return
     setChats((previous) => previous.map((chat) =>
-      chat.id === activeChat.id
+      chat.id === renameChatId
         ? { ...chat, title: renameDraft.trim(), updatedAt: Date.now() }
         : chat,
     ))
     setRenameOpen(false)
+    setRenameChatId(null)
+  }
+
+  function togglePinnedChat(chatId) {
+    setChats((previous) => previous.map((chat) =>
+      chat.id === chatId ? { ...chat, pinned: !chat.pinned, updatedAt: Date.now() } : chat,
+    ))
+    setToast(chats.find((chat) => chat.id === chatId)?.pinned ? 'Chat unpinned' : 'Chat pinned')
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current)
+    toastTimerRef.current = window.setTimeout(() => setToast(''), 1800)
+  }
+
+  function deleteChat(chatId) {
+    const remaining = chats.filter((chat) => chat.id !== chatId)
+    const nextChats = remaining.length ? remaining : [createChat()]
+    setChats(nextChats)
+    if (activeChatIdRef.current === chatId) {
+      const nextChat = nextChats[0]
+      setActiveChatId(nextChat.id)
+      activeChatIdRef.current = nextChat.id
+      setMessage('')
+      setActiveView('chat')
+      abortControllerRef.current?.abort()
+      abortControllerRef.current = null
+      requestInProgressRef.current = false
+      setIsStreaming(false)
+    }
+    setDeleteChatId(null)
+    setToast('Chat deleted')
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current)
+    toastTimerRef.current = window.setTimeout(() => setToast(''), 1800)
   }
 
   function toggleNav() {
@@ -397,10 +461,8 @@ function App() {
 
   const filteredChats = chats
     .filter((chat) => chat.messages.length > 0)
-    .filter((chat) =>
-      chat.title.toLowerCase().includes(searchQuery.toLowerCase()),
-    )
-    .sort((a, b) => b.updatedAt - a.updatedAt)
+    .filter((chat) => chat.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    .sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || b.updatedAt - a.updatedAt)
 
   return (
     <div className={`app ${isNavExpanded ? 'sidebar-open' : 'sidebar-closed'}`}>
@@ -409,12 +471,12 @@ function App() {
           type="button"
           className={`brand-header brand-toggle ${isNavExpanded ? 'expanded' : 'collapsed'}`}
           onClick={toggleNav}
-          title={isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+          data-tooltip={isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
           aria-label={isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
         >
           <span className="brand-logo">
             {isNavExpanded ? (
-              <Sparkles size={22} strokeWidth={1.8} />
+              <TrishulMark size={24} strokeWidth={1.8} />
             ) : (
               <PanelLeftOpen size={20} strokeWidth={1.8} />
             )}
@@ -432,7 +494,7 @@ function App() {
 
         <div className="sidebar-scroll-area">
           <div className="sidebar-top">
-            <button type="button" className={`sidebar-new-chat ${activeView === 'chat' ? 'active' : ''}`} onClick={handleNewChat} title="New chat">
+            <button type="button" className={`sidebar-new-chat ${activeView === 'chat' ? 'active' : ''}`} onClick={handleNewChat} data-tooltip="New chat" title="New chat">
               <Plus size={18} />
               {isNavExpanded && <span>New chat</span>}
             </button>
@@ -443,6 +505,7 @@ function App() {
                   type="button"
                   key={label}
                   className={`nav-rail-item ${label === 'Prompts' && activeView === 'prompts' ? 'active' : ''}`}
+                  data-tooltip={label}
                   title={label}
                   onClick={() => {
                     if (label === 'Prompts') {
@@ -492,16 +555,56 @@ function App() {
                 <p className="empty-history">No matching conversations</p>
               ) : (
                 filteredChats.map((chat) => (
-                  <button
-                    type="button"
-                    key={chat.id}
-                    className={`chat-history ${chat.id === activeChat?.id ? 'active' : ''}`}
-                    onClick={() => handleSelectChat(chat.id)}
-                    title={chat.title}
-                  >
-                    <MessageSquare size={15} strokeWidth={1.7} />
-                    <span>{chat.title}</span>
-                  </button>
+                  <div key={chat.id} className={`chat-history-wrap ${chat.id === activeChat?.id ? 'active' : ''} ${chat.pinned ? 'pinned' : ''}`}>
+                    <button
+                      type="button"
+                      className={`chat-history ${chat.id === activeChat?.id ? 'active' : ''}`}
+                      onClick={() => handleSelectChat(chat.id)}
+                      data-tooltip={chat.title}
+                    >
+                      {chat.pinned ? <Pin size={14} strokeWidth={1.8} /> : <MessageSquare size={15} strokeWidth={1.7} />}
+                      <span>{chat.title}</span>
+                    </button>
+                    <div className="chat-history-actions">
+                      <button
+                        type="button"
+                        className={`chat-more-button ${openChatMenuId === chat.id ? 'open' : ''}`}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          if (openChatMenuId === chat.id) {
+                            setOpenChatMenuId(null)
+                          } else {
+                            const rect = event.currentTarget.getBoundingClientRect()
+                            const menuHeight = 132
+                            const top = rect.bottom + menuHeight + 8 > window.innerHeight
+                              ? Math.max(8, rect.top - menuHeight - 6)
+                              : rect.bottom + 6
+                            setChatMenuPosition({ top, right: Math.max(8, window.innerWidth - rect.right) })
+                            setOpenChatMenuId(chat.id)
+                          }
+                        }}
+                        data-tooltip="More options"
+                        aria-label={`More options for ${chat.title}`}
+                        aria-haspopup="menu"
+                        aria-expanded={openChatMenuId === chat.id}
+                      >
+                        <MoreHorizontal size={17} />
+                      </button>
+                      {openChatMenuId === chat.id && (
+                        <div className="chat-options-menu" role="menu" aria-label={`Options for ${chat.title}`} style={{ top: chatMenuPosition.top, right: chatMenuPosition.right }}>
+                          <button type="button" role="menuitem" onClick={() => { togglePinnedChat(chat.id); setOpenChatMenuId(null) }}>
+                            <Pin size={14} /> {chat.pinned ? 'Unpin chat' : 'Pin chat'}
+                          </button>
+                          <button type="button" role="menuitem" onClick={() => { openRenameDialog(chat); setOpenChatMenuId(null) }}>
+                            <Pencil size={14} /> Rename chat
+                          </button>
+                          <button type="button" role="menuitem" className="delete-option" onClick={() => { setDeleteChatId(chat.id); setOpenChatMenuId(null) }}>
+                            <Trash2 size={14} /> Delete chat
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 ))
               ))}
           </div>
@@ -517,7 +620,7 @@ function App() {
               setAccountOpen(false)
             }}
             aria-expanded={socialOpen}
-            title="Connect with me"
+            data-tooltip="Connect with me"
           >
             <ExternalLink size={18} />
             {isNavExpanded && <span className="nav-label">Connect with me</span>}
@@ -549,7 +652,7 @@ function App() {
               setSocialOpen(false)
             }}
             aria-expanded={accountOpen}
-            title="Account"
+            data-tooltip="Account"
           >
             <span className="account-avatar">S</span>
             {isNavExpanded && (
@@ -603,7 +706,7 @@ function App() {
             {messages.length === 0 || activeView === 'prompts' ? (
               <div className={`welcome ${activeView === 'prompts' ? 'prompts-welcome' : ''}`}>
                 <div className="welcome-brand-mark" aria-hidden="true">
-                  <Sparkles size={23} strokeWidth={1.7} />
+                  <TrishulMark size={25} strokeWidth={1.7} />
                 </div>
                 <h1>{activeView === 'prompts' ? 'Create with Prompts' : 'Welcome to Siva AI'}</h1>
                 <p>{activeView === 'prompts' ? 'Choose a starting point and Siva AI will help you craft a useful prompt.' : 'Your ideas, questions, and code — let’s work on them together.'}</p>
@@ -658,16 +761,16 @@ function App() {
                                   const codeText = String(children?.props?.children ?? children ?? '')
                                   return (
                                     <div className="code-block-wrap">
+                                      <pre {...props}>{children}</pre>
                                       <button
                                         type="button"
                                         className="code-copy-btn"
                                         onClick={() => copyText(codeText, 'Code copied')}
-                                        title="Copy code"
+                                        data-tooltip="Copy code"
                                         aria-label="Copy code"
                                       >
-                                        <Copy size={13} /> Copy code
+                                        <Copy size={13} /> Copy
                                       </button>
-                                      <pre {...props}>{children}</pre>
                                     </div>
                                   )
                                 },
@@ -690,7 +793,7 @@ function App() {
                         <button
                           type="button"
                           onClick={() => copyText(msg.text, 'Message copied')}
-                          title="Copy message"
+                          data-tooltip="Copy message"
                           aria-label="Copy message"
                         >
                           <Copy size={13} /> Copy
@@ -698,11 +801,20 @@ function App() {
                         {msg.sender === 'ai' && index === messages.length - 1 && !isStreaming && (
                           <button
                             type="button"
-                            onClick={openRenameDialog}
-                            title="Rename conversation"
-                            aria-label="Rename conversation"
+                            onClick={() => {
+                              const lastUserIndex = messages
+                                .slice(0, index)
+                                .map((item) => item.sender)
+                                .lastIndexOf('user')
+                              if (lastUserIndex < 0 || !activeChat?.id) return
+                              const retryText = messages[lastUserIndex].text
+                              updateChatMessages(activeChat.id, (previous) => previous.slice(0, lastUserIndex))
+                              sendMessage(retryText)
+                            }}
+                            data-tooltip="Try again"
+                            aria-label="Try again"
                           >
-                            <Pencil size={13} /> Rename chat
+                            <RotateCcw size={13} /> Try again
                           </button>
                         )}
                       </div>
@@ -736,7 +848,7 @@ function App() {
                 className="stop-btn"
                 onClick={stopGeneration}
                 aria-label="Stop generating"
-                title="Stop generating"
+                data-tooltip="Stop generating"
               >
                 <Square size={15} fill="currentColor" />
                 <span>Stop</span>
@@ -746,7 +858,7 @@ function App() {
                 type="submit"
                 disabled={!message.trim()}
                 aria-label="Send message"
-                title="Send message"
+                data-tooltip="Send message"
               >
                 <ArrowUp size={19} />
                 <span>Send</span>
@@ -768,6 +880,22 @@ function App() {
             <input id="chat-rename-input" autoFocus maxLength={80} value={renameDraft} onChange={(event) => setRenameDraft(event.target.value)} placeholder="Enter chat name" />
             <div className="rename-dialog-actions"><button type="button" className="rename-cancel" onClick={() => setRenameOpen(false)}>Cancel</button><button type="submit" className="rename-save" disabled={!renameDraft.trim()}>Save changes</button></div>
           </form>
+        </div>
+      )}
+
+      {deleteChatId && (
+        <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setDeleteChatId(null) }}>
+          <div className="rename-dialog delete-dialog" role="alertdialog" aria-modal="true" aria-labelledby="delete-title">
+            <div className="rename-dialog-heading">
+              <div className="rename-dialog-icon delete-dialog-icon"><Trash2 size={18} /></div>
+              <div><h2 id="delete-title">Delete this chat?</h2><p>This conversation will be removed from Recent Chats.</p></div>
+              <button type="button" className="rename-close" onClick={() => setDeleteChatId(null)} aria-label="Close delete dialog"><X size={17} /></button>
+            </div>
+            <div className="rename-dialog-actions">
+              <button type="button" className="rename-cancel" onClick={() => setDeleteChatId(null)}>Cancel</button>
+              <button type="button" className="delete-confirm" onClick={() => deleteChat(deleteChatId)}>Delete chat</button>
+            </div>
+          </div>
         </div>
       )}
 

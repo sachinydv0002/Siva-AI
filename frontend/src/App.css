@@ -841,3 +841,514 @@ html[data-theme="light"] .rename-dialog input { background: #f8fafc; color: #172
 html[data-theme="light"] .rename-cancel { color: #435871; border-color: #d8e1ed; }
 html[data-theme="light"] .rename-close:hover { background: #edf3fa; color: #172438; }
 @media (max-height: 650px) { .welcome { padding-top: 12px; padding-bottom: 16px; } .welcome-brand-mark { width: 42px; height: 42px; margin-bottom: 10px; } .welcome p { margin: 9px 0 18px; } .prompt-card { min-height: 64px; } }
+
+
+/* Keep the composer and conversation content inside the workspace boundaries. */
+.chat-box {
+  min-width: 0;
+  width: 100%;
+  padding: 0 22px;
+  overflow: hidden;
+}
+.messages-container {
+  min-width: 0;
+  width: 100%;
+  padding: 0;
+}
+.messages-content {
+  width: min(100%, 1020px);
+  max-width: 1020px;
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+.message-list {
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+}
+.message.ai pre,
+.message.ai code {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.input-area {
+  flex: 0 1 auto;
+  width: min(100%, 1020px);
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Branded trishul mark: crisp, simple and consistent in the sidebar and welcome screen. */
+.brand-logo svg,
+.welcome-brand-mark svg {
+  display: block;
+  filter: drop-shadow(0 1px 1px rgba(255,255,255,.08));
+}
+
+/* Compact custom hover labels for navigation controls. Native title remains as fallback. */
+.app-sidebar [data-tooltip] { position: relative; }
+.app-sidebar [data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  z-index: 250;
+  top: 50%;
+  left: calc(100% + 10px);
+  transform: translate(4px, -50%);
+  padding: 7px 10px;
+  border: 1px solid #2b4059;
+  border-radius: 8px;
+  background: #101f32;
+  color: #edf5ff;
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  font-size: 11px;
+  font-weight: 550;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 120ms ease, transform 120ms ease, visibility 120ms ease;
+}
+.app-sidebar [data-tooltip]:hover::after,
+.app-sidebar [data-tooltip]:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(0, -50%);
+}
+.sidebar-open .app-sidebar [data-tooltip]::after { display: none; }
+html[data-theme="light"] .app-sidebar [data-tooltip]::after {
+  border-color: #d8e1ed;
+  background: #ffffff;
+  color: #172438;
+  box-shadow: 0 8px 24px rgba(28,51,78,.14);
+}
+@media (max-width: 700px) {
+  .chat-box { padding: 0 10px; }
+  .messages-content { padding: 0 4px; }
+  .input-area { width: 100%; }
+}
+
+
+/* Recent chat controls: pin, rename and delete without disturbing the chat row layout. */
+.chat-history-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+.chat-history-wrap:hover,
+.chat-history-wrap.active { background: #101f32; border-color: #213c5a; }
+.chat-history-wrap .chat-history {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 0;
+  border: 0;
+  background: transparent;
+  padding-right: 3px;
+}
+.chat-history-wrap .chat-history:hover,
+.chat-history-wrap .chat-history.active { background: transparent; border-color: transparent; }
+.chat-history-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 1px;
+  padding-right: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+.chat-history-wrap:hover .chat-history-actions,
+.chat-history-wrap:focus-within .chat-history-actions { opacity: 1; pointer-events: auto; }
+.chat-history-actions button {
+  display: grid;
+  width: 24px;
+  height: 26px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #8ea4c0;
+  cursor: pointer;
+}
+.chat-history-actions button:hover { background: #20354d; color: #eef6ff; }
+.chat-history-actions button:last-child:hover { background: rgba(220, 70, 82, .15); color: #ff8993; }
+.chat-history-wrap.pinned { border-color: rgba(56, 151, 218, .2); }
+html[data-theme="light"] .chat-history-wrap:hover,
+html[data-theme="light"] .chat-history-wrap.active { background: #edf3fa; border-color: #d8e1ed; }
+html[data-theme="light"] .chat-history-actions button:hover { background: #dfeaf6; color: #17324c; }
+html[data-theme="light"] .chat-history-actions button:last-child:hover { background: #fff0f0; color: #c52b3a; }
+
+/* Keep the composer centered inside the workspace at every sidebar width. */
+.main-workspace, .chat-box, .messages-container, .messages-content { min-width: 0; }
+.chat-box { padding-left: 22px; padding-right: 22px; overflow: hidden; }
+.input-area {
+  display: flex;
+  align-self: center;
+  flex: 0 0 auto;
+  width: min(100%, 1020px);
+  max-width: 100%;
+  margin: 0 auto 22px;
+  box-sizing: border-box;
+}
+.messages-container { flex: 1 1 auto; min-width: 0; }
+.messages-content { width: min(100%, 1020px); max-width: 1020px; margin: 0 auto; padding-left: 12px; padding-right: 12px; }
+.message-list { width: 100%; max-width: 100%; }
+
+/* Tooltips for icon-only and action buttons, consistent with the Siva UI. */
+.app-sidebar button[title] { position: relative; }
+.app-sidebar button[title]:not([data-tooltip])::after {
+  content: attr(title);
+  position: absolute;
+  z-index: 260;
+  left: calc(100% + 9px);
+  top: 50%;
+  transform: translate(3px, -50%);
+  max-width: 230px;
+  padding: 7px 9px;
+  border: 1px solid #2b4059;
+  border-radius: 7px;
+  background: #101f32;
+  color: #edf5ff;
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  font-size: 11px;
+  font-weight: 550;
+  line-height: 1.25;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 120ms ease, transform 120ms ease, visibility 120ms ease;
+}
+.app-sidebar button[title]:not([data-tooltip]):hover::after,
+.app-sidebar button[title]:not([data-tooltip]):focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(0, -50%);
+}
+html[data-theme="light"] .app-sidebar button[title]:not([data-tooltip])::after {
+  background: #fff; color: #172438; border-color: #d8e1ed;
+}
+.delete-dialog-icon { color: #ff8b95; background: rgba(220, 70, 82, .12); border-color: rgba(220, 70, 82, .28); }
+.delete-confirm { border-color: #c93c4b !important; background: #c93c4b; color: #fff; }
+.delete-confirm:hover { background: #ad2f3d; }
+html[data-theme="light"] .delete-confirm { color: #fff; }
+@media (max-width: 700px) {
+  .chat-box { padding-left: 10px; padding-right: 10px; }
+  .input-area { width: 100%; margin-bottom: 12px; }
+  .chat-history-actions button { width: 22px; }
+}
+
+
+/* Final polish requested from the screenshots: compact sidebar, visible chat actions,
+   and consistent dark tooltips instead of browser-default white title popups. */
+.app-sidebar {
+  flex-basis: 248px;
+  width: 248px;
+}
+.sidebar-closed .app-sidebar {
+  flex-basis: 72px;
+  width: 72px;
+}
+@media (max-width: 700px) {
+  .app-sidebar { flex-basis: 236px; width: 236px; }
+  .sidebar-closed .app-sidebar { flex-basis: 62px; width: 62px; }
+}
+
+.history-search {
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+  margin-right: 2px;
+  margin-left: 2px;
+}
+.history-search input { min-width: 0; }
+.chat-history-wrap { width: 100%; }
+.chat-history-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+.chat-history-actions button {
+  width: 25px;
+  height: 28px;
+  flex-shrink: 0;
+}
+.chat-history-wrap .chat-history span { padding-right: 2px; }
+
+/* Show message controls without requiring hover. Keep them outside the message bubble. */
+.message-row .message-actions {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.message-row .message-actions button {
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+}
+
+/* Polished, readable custom tooltips. Use data-tooltip rather than native title bubbles. */
+.app-sidebar [data-tooltip] { position: relative; }
+.app-sidebar [data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  z-index: 300;
+  top: 50%;
+  left: calc(100% + 9px);
+  transform: translate(3px, -50%);
+  max-width: 240px;
+  padding: 7px 10px;
+  border: 1px solid #304967;
+  border-radius: 8px;
+  background: #14243a;
+  color: #f2f7ff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .32);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 120ms ease, transform 120ms ease, visibility 120ms ease;
+}
+.app-sidebar [data-tooltip]:hover::after,
+.app-sidebar [data-tooltip]:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(0, -50%);
+}
+/* Buttons with visible labels do not need a duplicate tooltip while expanded. */
+.sidebar-open .brand-header[data-tooltip]::after,
+.sidebar-open .sidebar-new-chat[data-tooltip]::after,
+.sidebar-open .nav-rail-item[data-tooltip]::after,
+.sidebar-open .social-trigger[data-tooltip]::after,
+.sidebar-open .account-trigger[data-tooltip]::after { display: none; }
+/* Row action buttons remain icon-only, so their custom tooltips stay enabled. */
+html[data-theme="light"] .app-sidebar [data-tooltip]::after {
+  background: #17283d;
+  border-color: #304967;
+  color: #ffffff;
+  box-shadow: 0 8px 24px rgba(28, 51, 78, .22);
+}
+
+
+/* Match tooltips on chat/composer controls to the sidebar tooltip treatment. */
+.main-workspace [data-tooltip] { position: relative; }
+.main-workspace [data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  z-index: 300;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translate(-50%, 3px);
+  padding: 7px 10px;
+  border: 1px solid #304967;
+  border-radius: 8px;
+  background: #14243a;
+  color: #f2f7ff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .32);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 120ms ease, transform 120ms ease, visibility 120ms ease;
+}
+.main-workspace [data-tooltip]:hover::after,
+.main-workspace [data-tooltip]:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+html[data-theme="light"] .main-workspace [data-tooltip]::after {
+  background: #17283d;
+  border-color: #304967;
+  color: #fff;
+}
+
+
+/* Compact ChatGPT-like sidebar and accessible chat overflow menu. */
+.app-sidebar { flex-basis: 248px; width: 248px; }
+.sidebar-closed .app-sidebar { flex-basis: 72px; width: 72px; }
+
+/* Keep the conversation column and composer from stretching too wide on desktop. */
+.message-list, .welcome { max-width: 880px; }
+.input-area { width: min(100%, 900px); }
+
+.chat-history-wrap { overflow: visible; }
+.chat-history-actions { position: relative; padding-right: 5px; }
+.chat-history-actions .chat-more-button {
+  display: grid;
+  width: 28px;
+  height: 29px;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: #91a7c1;
+  background: transparent;
+  cursor: pointer;
+  transition: color 140ms ease, background 140ms ease, border-color 140ms ease;
+}
+.chat-history-actions .chat-more-button:hover,
+.chat-history-actions .chat-more-button.open {
+  color: #f1f7ff;
+  background: #20354d;
+  border-color: #304a67;
+}
+.chat-options-menu {
+  position: absolute;
+  z-index: 500;
+  top: calc(100% + 5px);
+  right: 3px;
+  width: 164px;
+  padding: 5px;
+  border: 1px solid #2b425d;
+  border-radius: 11px;
+  background: #101e30;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .42);
+  animation: menu-appear 120ms ease-out;
+}
+.chat-options-menu button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 34px;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #dce8f7;
+  text-align: left;
+  font-size: 12px;
+  cursor: pointer;
+}
+.chat-options-menu button:hover { background: #20354d; color: #fff; }
+.chat-options-menu button svg { color: #9bb0ca; flex: 0 0 auto; }
+.chat-options-menu button.delete-option { color: #ff9ca4; }
+.chat-options-menu button.delete-option svg { color: #ff8993; }
+@keyframes menu-appear { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Tooltips: dark, readable, consistent; only appear on hover/focus. */
+.app-sidebar [data-tooltip]::after {
+  padding: 8px 11px;
+  border: 1px solid #38516e;
+  border-radius: 9px;
+  background: #172a41;
+  color: #f4f8ff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .1px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, .38);
+}
+html[data-theme="light"] .chat-options-menu { background: #fff; border-color: #d5e0ec; box-shadow: 0 14px 34px rgba(25, 45, 70, .2); }
+html[data-theme="light"] .chat-options-menu button { color: #263b53; }
+html[data-theme="light"] .chat-options-menu button:hover { background: #edf4fb; color: #172438; }
+html[data-theme="light"] .chat-options-menu button svg { color: #637b95; }
+html[data-theme="light"] .chat-options-menu button.delete-option,
+html[data-theme="light"] .chat-options-menu button.delete-option svg { color: #c52b3a; }
+html[data-theme="light"] .chat-history-actions .chat-more-button:hover,
+html[data-theme="light"] .chat-history-actions .chat-more-button.open { background: #e5eef8; border-color: #d5e0ec; color: #17324c; }
+@media (max-width: 700px) {
+  .app-sidebar { flex-basis: 230px; width: 230px; }
+  .sidebar-closed .app-sidebar { flex-basis: 62px; width: 62px; }
+  .message-list, .welcome { max-width: 100%; }
+  .input-area { width: 100%; }
+}
+
+/* Final polish: keep code copy controls inside the code panel at its top-right. */
+.message .code-block-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin: 12px 0;
+}
+.message .code-block-wrap pre {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 42px 14px 14px;
+  overflow: auto;
+}
+.message .code-block-wrap .code-copy-btn {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 27px;
+  padding: 4px 8px;
+  border: 1px solid #2a4058;
+  border-radius: 7px;
+  background: #101d2d;
+  color: #c7d7ea;
+  font-size: 11px;
+  line-height: 1;
+}
+.message .code-block-wrap .code-copy-btn:hover {
+  background: #20354d;
+  border-color: #456482;
+  color: #fff;
+}
+
+/* The history list is scrollable, so its menu must float above that scroll layer. */
+.chat-options-menu {
+  position: fixed !important;
+  z-index: 9999;
+  top: auto;
+  right: auto;
+  width: 176px;
+  max-width: calc(100vw - 16px);
+  max-height: min(220px, calc(100vh - 16px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.chat-history-wrap,
+.chat-history-actions { overflow: visible; }
+
+/* Tooltips remain available for icon-only New Chat and Prompts when collapsed. */
+.sidebar-closed .app-sidebar .sidebar-new-chat[data-tooltip]:hover::after,
+.sidebar-closed .app-sidebar .nav-rail-item[data-tooltip]:hover::after,
+.sidebar-closed .app-sidebar .sidebar-new-chat[data-tooltip]:focus-visible::after,
+.sidebar-closed .app-sidebar .nav-rail-item[data-tooltip]:focus-visible::after {
+  display: block;
+  opacity: 1;
+  visibility: visible;
+}
+
+
+/* Reliable labels for collapsed navigation buttons. Native title is also kept as a fallback. */
+.sidebar-closed .app-sidebar .sidebar-new-chat[data-tooltip],
+.sidebar-closed .app-sidebar .nav-rail-item[data-tooltip] {
+  overflow: visible;
+}
+.sidebar-closed .app-sidebar .sidebar-new-chat[data-tooltip]::after,
+.sidebar-closed .app-sidebar .nav-rail-item[data-tooltip]::after {
+  display: block !important;
+  left: calc(100% + 10px);
+  top: 50%;
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(4px, -50%);
+}
+.sidebar-closed .app-sidebar .sidebar-new-chat[data-tooltip]:hover::after,
+.sidebar-closed .app-sidebar .sidebar-new-chat[data-tooltip]:focus-visible::after,
+.sidebar-closed .app-sidebar .nav-rail-item[data-tooltip]:hover::after,
+.sidebar-closed .app-sidebar .nav-rail-item[data-tooltip]:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(0, -50%);
+}
