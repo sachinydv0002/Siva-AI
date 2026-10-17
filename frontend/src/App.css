@@ -85,6 +85,15 @@ button { color: inherit; }
 .brand-toggle.collapsed .brand-logo { background: transparent; box-shadow: none; color: #91a8c4; }
 .brand-toggle.collapsed:hover .brand-logo { background: rgba(142, 164, 192, .09); color: #e8f3ff; }
 
+.brand-trishul {
+  display: inline-grid;
+  place-items: center;
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+  font-size: 25px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .16));
+}
+
 .brand-logo {
   display: grid;
   flex: 0 0 40px;
@@ -1352,3 +1361,248 @@ html[data-theme="light"] .chat-history-actions .chat-more-button.open { backgrou
   visibility: visible;
   transform: translate(0, -50%);
 }
+
+
+/* UI polish: theme-aware code controls, clean collapsed-nav tooltips, and popover behavior */
+.app-sidebar [data-tooltip]::after {
+  max-width: 220px;
+  padding: 8px 11px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .1px;
+  line-height: 1.25;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .22);
+}
+.sidebar-closed .app-sidebar .sidebar-new-chat[data-tooltip]::after,
+.sidebar-closed .app-sidebar .nav-rail-item[data-tooltip]::after,
+.sidebar-closed .app-sidebar .social-trigger[data-tooltip]::after,
+.sidebar-closed .app-sidebar .account-trigger[data-tooltip]::after {
+  left: calc(100% + 12px);
+  top: 50%;
+}
+.app.social-popover-open .app-sidebar .social-trigger[data-tooltip]::after,
+.app.account-popover-open .app-sidebar .account-trigger[data-tooltip]::after {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+html[data-theme="light"] .code-copy-btn {
+  background: #ffffff;
+  border-color: #d6e0eb;
+  color: #253a52;
+  box-shadow: 0 2px 6px rgba(24, 42, 65, .08);
+}
+html[data-theme="light"] .code-copy-btn:hover {
+  background: #edf5fd;
+  border-color: #b8cfe5;
+  color: #102b47;
+}
+html[data-theme="light"] .message.ai pre {
+  background: #f8fafc;
+  border-color: #d8e1ed;
+  color: #172438;
+}
+html[data-theme="light"] .message.ai code {
+  color: #172438;
+}
+
+/* Final UX polish: icon-only message actions with custom tooltips. */
+.main-workspace .message-actions button,
+.main-workspace .code-copy-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  transition: color 150ms ease, background 150ms ease, border-color 150ms ease, transform 150ms ease;
+}
+.main-workspace .message-actions button:hover,
+.main-workspace .code-copy-btn:hover {
+  transform: translateY(-1px);
+  color: var(--text);
+  background: var(--panel-raised);
+  border-color: var(--border);
+}
+.main-workspace .message-actions [data-tooltip]::after,
+.main-workspace .code-copy-btn[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  z-index: 500;
+  left: 50%;
+  bottom: calc(100% + 9px);
+  transform: translate(-50%, 4px);
+  padding: 7px 10px;
+  border: 1px solid #36516e;
+  border-radius: 8px;
+  background: #14243a;
+  color: #f4f8ff;
+  box-shadow: 0 8px 22px rgba(0,0,0,.24);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 120ms ease, transform 120ms ease, visibility 120ms ease;
+}
+.main-workspace .message-actions [data-tooltip]:hover::after,
+.main-workspace .message-actions [data-tooltip]:focus-visible::after,
+.main-workspace .code-copy-btn[data-tooltip]:hover::after,
+.main-workspace .code-copy-btn[data-tooltip]:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+.main-workspace .message .code-block-wrap .code-copy-btn {
+  width: 32px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0;
+  background: var(--panel-raised);
+  border-color: var(--border);
+  color: var(--text);
+}
+html[data-theme="light"] .main-workspace .message .code-block-wrap .code-copy-btn {
+  background: #fff;
+  border-color: #d6e0eb;
+  color: #253a52;
+}
+html[data-theme="light"] .main-workspace .message-actions [data-tooltip]::after,
+html[data-theme="light"] .main-workspace .code-copy-btn[data-tooltip]::after {
+  background: #17283d;
+  border-color: #304967;
+  color: #fff;
+}
+
+/* Search input: clearer hierarchy, refined focus ring, and a modern pill surface. */
+.history-search {
+  min-height: 42px;
+  margin: 0 2px 10px;
+  padding: 0 11px;
+  gap: 10px;
+  border: 1px solid #2b405a;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #101f32 0%, #0b1929 100%);
+  color: #8fa9c7;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025), 0 3px 10px rgba(0,0,0,.08);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+.history-search:focus-within {
+  border-color: #258bd0;
+  box-shadow: 0 0 0 3px rgba(21,152,245,.13), 0 5px 16px rgba(0,0,0,.1);
+  background: #0d1b2c;
+}
+.history-search > svg { flex: 0 0 auto; color: #7fa5cb; }
+.history-search input {
+  height: 38px;
+  font-size: 12.5px;
+  letter-spacing: .05px;
+}
+.history-search input::placeholder { color: #8ca0b8; opacity: 1; }
+.history-search button {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  border-radius: 7px;
+}
+.history-search button:hover { background: rgba(128,164,204,.14); color: var(--text); }
+html[data-theme="light"] .history-search {
+  border-color: #d5e0ed;
+  background: linear-gradient(135deg, #ffffff 0%, #f4f8fd 100%);
+  color: #607994;
+  box-shadow: 0 3px 10px rgba(25,45,70,.05);
+}
+html[data-theme="light"] .history-search:focus-within {
+  border-color: #3297e2;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(21,152,245,.12), 0 5px 16px rgba(25,45,70,.07);
+}
+html[data-theme="light"] .history-search > svg { color: #6488ad; }
+html[data-theme="light"] .history-search input::placeholder { color: #8193a8; }
+
+/* Keep the collapsed rail's custom labels visible and avoid browser-native white title bubbles. */
+.sidebar-closed .app-sidebar .sidebar-new-chat[data-tooltip]::after,
+.sidebar-closed .app-sidebar .nav-rail-item[data-tooltip]::after {
+  max-width: 220px;
+  padding: 8px 11px;
+  border-radius: 9px;
+  background: #172a41;
+  border-color: #38516e;
+  color: #f4f8ff;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 10px 26px rgba(0,0,0,.28);
+}
+
+/* Consistent Siva trishul identity: no platform-dependent emoji rendering. */
+.brand-logo {
+  color: #f4df9b;
+  background: linear-gradient(145deg, #173b43 0%, #142b3a 58%, #252b4a 100%);
+  border: 1px solid rgba(226, 199, 123, .38);
+  box-shadow: 0 5px 18px rgba(4, 15, 26, .22), inset 0 1px 0 rgba(255,255,255,.09);
+}
+.brand-logo svg { width: 25px; height: 25px; stroke: currentColor; }
+.brand-toggle.collapsed .brand-logo,
+.brand-toggle.collapsed:hover .brand-logo {
+  color: #f4df9b;
+  background: linear-gradient(145deg, #173b43 0%, #142b3a 58%, #252b4a 100%);
+  border: 1px solid rgba(226, 199, 123, .38);
+  box-shadow: 0 5px 18px rgba(4, 15, 26, .22);
+}
+.welcome-brand-mark {
+  color: #f4df9b;
+  background: linear-gradient(145deg, #173b43 0%, #142b3a 58%, #252b4a 100%);
+  border: 1px solid rgba(226, 199, 123, .38);
+  box-shadow: 0 8px 22px rgba(4, 15, 26, .18), inset 0 1px 0 rgba(255,255,255,.12);
+}
+.prompts-welcome .welcome-brand-mark { color: #f4df9b; background: linear-gradient(145deg, #173b43, #252b4a); }
+html[data-theme="light"] .brand-logo,
+html[data-theme="light"] .brand-toggle.collapsed .brand-logo,
+html[data-theme="light"] .brand-toggle.collapsed:hover .brand-logo,
+html[data-theme="light"] .welcome-brand-mark,
+html[data-theme="light"] .prompts-welcome .welcome-brand-mark {
+  color: #f7e4a5;
+  background: linear-gradient(145deg, #174b53, #263b56);
+  border-color: rgba(139, 113, 47, .28);
+  box-shadow: 0 5px 16px rgba(22, 47, 69, .15);
+}
+
+/* Floating tooltips are rendered outside the scrollable sidebar, so they cannot be clipped. */
+.siva-floating-tooltip {
+  position: fixed;
+  z-index: 9999;
+  transform: translateY(-50%);
+  max-width: 240px;
+  padding: 8px 12px;
+  border: 1px solid #3b536d;
+  border-radius: 9px;
+  background: #13253a;
+  color: #f4f8ff;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .3);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: .1px;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: siva-tooltip-in 110ms ease-out;
+}
+@keyframes siva-tooltip-in { from { opacity: 0; transform: translate(3px, -50%); } to { opacity: 1; transform: translate(0, -50%); } }
+html[data-theme="light"] .siva-floating-tooltip {
+  border-color: #304967;
+  background: #172a41;
+  color: #fff;
+  box-shadow: 0 10px 26px rgba(25, 45, 70, .22);
+}
+/* Prevent duplicate pseudo-tooltips; the floating tooltip above handles collapsed navigation. */
+.sidebar-closed .app-sidebar .brand-header[data-tooltip]::after,
+.sidebar-closed .app-sidebar .sidebar-new-chat[data-tooltip]::after,
+.sidebar-closed .app-sidebar .nav-rail-item[data-tooltip]::after { display: none !important; }

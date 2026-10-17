@@ -96,6 +96,7 @@ function App() {
   const [socialOpen, setSocialOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
   const [toast, setToast] = useState('')
+  const [sidebarTooltip, setSidebarTooltip] = useState(null)
   const [activeView, setActiveView] = useState('chat')
   const [renameOpen, setRenameOpen] = useState(false)
   const [renameDraft, setRenameDraft] = useState('')
@@ -464,8 +465,14 @@ function App() {
     .filter((chat) => chat.title.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || b.updatedAt - a.updatedAt)
 
+  const showSidebarTooltip = (event, label) => {
+    if (isNavExpanded || !label) return
+    const rect = event.currentTarget.getBoundingClientRect()
+    setSidebarTooltip({ label, top: rect.top + rect.height / 2, left: rect.right + 10 })
+  }
+
   return (
-    <div className={`app ${isNavExpanded ? 'sidebar-open' : 'sidebar-closed'}`}>
+    <div className={`app ${isNavExpanded ? 'sidebar-open' : 'sidebar-closed'} ${socialOpen ? 'social-popover-open' : ''} ${accountOpen ? 'account-popover-open' : ''}`}>
       <aside className="app-sidebar glass" aria-label="Siva AI sidebar" ref={sidebarRef}>
         <button
           type="button"
@@ -473,13 +480,13 @@ function App() {
           onClick={toggleNav}
           data-tooltip={isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
           aria-label={isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+          onMouseEnter={(event) => showSidebarTooltip(event, isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar')}
+          onMouseLeave={() => setSidebarTooltip(null)}
+          onFocus={(event) => showSidebarTooltip(event, isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar')}
+          onBlur={() => setSidebarTooltip(null)}
         >
-          <span className="brand-logo">
-            {isNavExpanded ? (
-              <TrishulMark size={24} strokeWidth={1.8} />
-            ) : (
-              <PanelLeftOpen size={20} strokeWidth={1.8} />
-            )}
+          <span className="brand-logo" aria-label="Siva AI trishul logo">
+            <TrishulMark size={25} strokeWidth={2} />
           </span>
           {isNavExpanded && (
             <>
@@ -494,7 +501,7 @@ function App() {
 
         <div className="sidebar-scroll-area">
           <div className="sidebar-top">
-            <button type="button" className={`sidebar-new-chat ${activeView === 'chat' ? 'active' : ''}`} onClick={handleNewChat} data-tooltip="New chat" title="New chat">
+            <button type="button" className={`sidebar-new-chat ${activeView === 'chat' ? 'active' : ''}`} onClick={handleNewChat} data-tooltip="New chat" onMouseEnter={(event) => showSidebarTooltip(event, 'New chat')} onMouseLeave={() => setSidebarTooltip(null)} onFocus={(event) => showSidebarTooltip(event, 'New chat')} onBlur={() => setSidebarTooltip(null)}>
               <Plus size={18} />
               {isNavExpanded && <span>New chat</span>}
             </button>
@@ -506,7 +513,11 @@ function App() {
                   key={label}
                   className={`nav-rail-item ${label === 'Prompts' && activeView === 'prompts' ? 'active' : ''}`}
                   data-tooltip={label}
-                  title={label}
+                  aria-label={label}
+                  onMouseEnter={(event) => showSidebarTooltip(event, label)}
+                  onMouseLeave={() => setSidebarTooltip(null)}
+                  onFocus={(event) => showSidebarTooltip(event, label)}
+                  onBlur={() => setSidebarTooltip(null)}
                   onClick={() => {
                     if (label === 'Prompts') {
                       setActiveView('prompts')
@@ -620,7 +631,7 @@ function App() {
               setAccountOpen(false)
             }}
             aria-expanded={socialOpen}
-            data-tooltip="Connect with me"
+            data-tooltip={socialOpen ? undefined : "Connect with me"}
           >
             <ExternalLink size={18} />
             {isNavExpanded && <span className="nav-label">Connect with me</span>}
@@ -652,7 +663,7 @@ function App() {
               setSocialOpen(false)
             }}
             aria-expanded={accountOpen}
-            data-tooltip="Account"
+            data-tooltip={accountOpen ? undefined : "Your account"}
           >
             <span className="account-avatar">S</span>
             {isNavExpanded && (
@@ -766,10 +777,10 @@ function App() {
                                         type="button"
                                         className="code-copy-btn"
                                         onClick={() => copyText(codeText, 'Code copied')}
-                                        data-tooltip="Copy code"
                                         aria-label="Copy code"
+                                        data-tooltip="Copy code"
                                       >
-                                        <Copy size={13} /> Copy
+                                        <Copy size={15} />
                                       </button>
                                     </div>
                                   )
@@ -793,11 +804,26 @@ function App() {
                         <button
                           type="button"
                           onClick={() => copyText(msg.text, 'Message copied')}
-                          data-tooltip="Copy message"
                           aria-label="Copy message"
+                          data-tooltip="Copy message"
                         >
-                          <Copy size={13} /> Copy
+                          <Copy size={15} />
                         </button>
+                        {msg.sender === 'user' && !isStreaming && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!activeChat?.id) return
+                              setMessage(msg.text)
+                              updateChatMessages(activeChat.id, (previous) => previous.slice(0, index))
+                              requestAnimationFrame(() => textareaRef.current?.focus())
+                            }}
+                            aria-label="Edit message"
+                            data-tooltip="Edit message"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                        )}
                         {msg.sender === 'ai' && index === messages.length - 1 && !isStreaming && (
                           <button
                             type="button"
@@ -811,10 +837,10 @@ function App() {
                               updateChatMessages(activeChat.id, (previous) => previous.slice(0, lastUserIndex))
                               sendMessage(retryText)
                             }}
-                            data-tooltip="Try again"
                             aria-label="Try again"
+                            data-tooltip="Try again"
                           >
-                            <RotateCcw size={13} /> Try again
+                            <RotateCcw size={15} />
                           </button>
                         )}
                       </div>
@@ -896,6 +922,12 @@ function App() {
               <button type="button" className="delete-confirm" onClick={() => deleteChat(deleteChatId)}>Delete chat</button>
             </div>
           </div>
+        </div>
+      )}
+
+      {sidebarTooltip && !isNavExpanded && (
+        <div className="siva-floating-tooltip" role="tooltip" style={{ top: sidebarTooltip.top, left: sidebarTooltip.left }}>
+          {sidebarTooltip.label}
         </div>
       )}
 
