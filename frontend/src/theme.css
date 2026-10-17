@@ -1,0 +1,30 @@
+/* Siva AI Glassmorphism Theme */
+
+:root {
+  --bg-color: #07111F;
+  --secondary-bg: #0B1627;
+  --glass-surface: rgba(12, 22, 38, 0.7);
+  --elevated-surface: rgba(25, 48, 75, 0.65);
+  --glass-border: rgba(180, 210, 240, 0.16);
+  
+  --primary-blue: #078CF5;
+  --cyan-accent: #20D5E8;
+  --purple-accent: #A855F7;
+  
+  --text-primary: #F5F7FB;
+  --text-secondary: #9BAEC2;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+}
+
+.glass {
+  background: var(--glass-surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+}
