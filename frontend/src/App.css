@@ -1647,3 +1647,12 @@ html[data-theme="light"] .siva-floating-tooltip {
 html[data-theme="light"] .brand-expand-icon { color: #526b86; }
 html[data-theme="light"] .brand-toggle.collapsed:hover .brand-expand-icon,
 html[data-theme="light"] .brand-toggle.collapsed:focus-visible .brand-expand-icon { color: #173a5d; }
+
+
+/* Do not let the collapsed rail tooltip remain visible over an open popover. */
+.app.social-popover-open .siva-floating-tooltip,
+.app.account-popover-open .siva-floating-tooltip {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}

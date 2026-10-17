@@ -621,17 +621,19 @@ function App() {
             type="button"
             className={`nav-rail-item social-trigger ${socialOpen ? 'active' : ''}`}
             onClick={() => {
+              // Clear any already-visible floating tooltip before opening the menu.
+              setSidebarTooltip(null)
               setSocialOpen((value) => !value)
               setAccountOpen(false)
             }}
             aria-expanded={socialOpen}
             data-tooltip="Connect with me"
             onMouseEnter={(event) => {
-              if (!isNavExpanded) showSidebarTooltip(event, 'Connect with me')
+              if (!isNavExpanded && !socialOpen) showSidebarTooltip(event, 'Connect with me')
             }}
             onMouseLeave={() => setSidebarTooltip(null)}
             onFocus={(event) => {
-              if (!isNavExpanded) showSidebarTooltip(event, 'Connect with me')
+              if (!isNavExpanded && !socialOpen) showSidebarTooltip(event, 'Connect with me')
             }}
             onBlur={() => setSidebarTooltip(null)}
           >
@@ -927,7 +929,7 @@ function App() {
         </div>
       )}
 
-      {sidebarTooltip && !isNavExpanded && (
+      {sidebarTooltip && !isNavExpanded && !socialOpen && !accountOpen && (
         <div className="siva-floating-tooltip" role="tooltip" style={{ top: sidebarTooltip.top, left: sidebarTooltip.left }}>
           {sidebarTooltip.label}
         </div>
