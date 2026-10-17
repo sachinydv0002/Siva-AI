@@ -12,12 +12,14 @@ function App() {
 
   const textareaRef = useRef(null)
   const abortControllerRef = useRef(null);
-  const chatBoxRef = useRef(null)
+    const chatBoxRef = useRef(null)
   const intervalRef = useRef(null)
+  const shouldAutoScroll = useRef(true) // Track auto-scroll state
 
   useEffect(() => {
     textareaRef.current?.focus()
   }, [])
+
 
   useEffect(() => {
     if (!isTyping) {
@@ -32,11 +34,16 @@ function App() {
     return () => clearInterval(intervalRef.current)
   }, [isTyping])
 
-  useEffect(() => {
-    if (chatBoxRef.current) {
-      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight
+      useEffect(() => {
+    const chatBox = chatBoxRef.current
+    if (chatBox && shouldAutoScroll.current) {
+      requestAnimationFrame(() => {
+        chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' })
+      })
     }
   }, [messages])
+
+
 
   function newChat() {
     setMessages([])
@@ -269,10 +276,18 @@ function App() {
 
       {/* Chat */}
 
-      <main
+            <main
         className={`chat-box ${isSidebarOpen ? 'sidebar-open' : ''}`}
         ref={chatBoxRef}
+        onScroll={() => {
+          const chatBox = chatBoxRef.current
+          if (chatBox) {
+            const { scrollTop, scrollHeight, clientHeight } = chatBox
+            shouldAutoScroll.current = scrollHeight - (scrollTop + clientHeight) < 100
+          }
+        }}
       >
+
         {messages.length === 0 ? (
 
           <div className="welcome">

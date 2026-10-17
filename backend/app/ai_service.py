@@ -1,3 +1,4 @@
+import time
 from google import genai
 from dotenv import load_dotenv
 import os
@@ -10,12 +11,16 @@ client = genai.Client(
 
 
 def get_ai_response(message: str):
+    start_time = time.time()
     response = client.models.generate_content(
         model="gemini-3.5-flash-lite",
         contents=message
     )
+    end_time = time.time()
+    print(f"[Performance] Gemini API response time: {end_time - start_time:.4f}s")
 
     return response.text
+
 
 
 def stream_ai_response(message: str):

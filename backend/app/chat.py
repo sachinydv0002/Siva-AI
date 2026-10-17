@@ -1,3 +1,4 @@
+import time
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -13,12 +14,17 @@ class ChatRequest(BaseModel):
 
 @router.post("/chat")
 def chat(request: ChatRequest):
+    start_time = time.time()
 
     reply = get_ai_response(request.message)
 
+    end_time = time.time()
+    print(f"[Performance] Total /api/chat request time: {end_time - start_time:.4f}s")
+    
     return {
         "reply": reply
     }
+
 
 
 @router.post("/chat/stream")
