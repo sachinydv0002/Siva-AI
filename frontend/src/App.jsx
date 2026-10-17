@@ -32,23 +32,15 @@ import {
 import './App.css'
 
 
-function TrishulMark({ size = 23, strokeWidth = 1.8 }) {
+function TrishulMark({ size = 23 }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 32 32"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+    <span
+      className="siva-trishul-emoji"
+      style={{ fontSize: size, lineHeight: 1 }}
       aria-hidden="true"
-      focusable="false"
     >
-      <path d="M16 29V9" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
-      <path d="M16 16C11.5 16 8.2 12.8 8.2 7.4C12.8 8.4 15.1 11.3 16 16Z" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M16 16C20.5 16 23.8 12.8 23.8 7.4C19.2 8.4 16.9 11.3 16 16Z" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M16 9C12.8 7 12.4 4.6 16 2C19.6 4.6 19.2 7 16 9Z" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M11.5 29H20.5" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
-    </svg>
+      🔱
+    </span>
   )
 }
 
@@ -485,17 +477,19 @@ function App() {
           onFocus={(event) => showSidebarTooltip(event, isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar')}
           onBlur={() => setSidebarTooltip(null)}
         >
-          <span className="brand-logo" aria-label="Siva AI trishul logo">
-            <TrishulMark size={25} strokeWidth={2} />
-          </span>
-          {isNavExpanded && (
+          {isNavExpanded ? (
             <>
+              <span className="brand-logo" aria-label="Siva AI trishul logo">
+                <TrishulMark size={25} strokeWidth={2} />
+              </span>
               <span className="brand-copy">
                 <span className="brand-name">Siva AI</span>
                 <span className="brand-caption">Your AI workspace</span>
               </span>
               <PanelLeftClose className="brand-collapse-icon" size={17} />
             </>
+          ) : (
+            <PanelLeftOpen className="brand-expand-icon" size={20} aria-hidden="true" />
           )}
         </button>
 
@@ -631,7 +625,15 @@ function App() {
               setAccountOpen(false)
             }}
             aria-expanded={socialOpen}
-            data-tooltip={socialOpen ? undefined : "Connect with me"}
+            data-tooltip="Connect with me"
+            onMouseEnter={(event) => {
+              if (!isNavExpanded) showSidebarTooltip(event, 'Connect with me')
+            }}
+            onMouseLeave={() => setSidebarTooltip(null)}
+            onFocus={(event) => {
+              if (!isNavExpanded) showSidebarTooltip(event, 'Connect with me')
+            }}
+            onBlur={() => setSidebarTooltip(null)}
           >
             <ExternalLink size={18} />
             {isNavExpanded && <span className="nav-label">Connect with me</span>}
