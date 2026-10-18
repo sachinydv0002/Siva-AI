@@ -1656,3 +1656,572 @@ html[data-theme="light"] .brand-toggle.collapsed:focus-visible .brand-expand-ico
   opacity: 0 !important;
   visibility: hidden !important;
 }
+
+
+/* Siva UI updates: wider expanded sidebar, light-theme logo, compact 2-3-2 suggestion grid. */
+.app.sidebar-open .app-sidebar,
+.sidebar-open .app-sidebar {
+  flex: 0 0 292px;
+  width: 292px;
+  min-width: 292px;
+}
+
+.app.sidebar-closed .app-sidebar,
+.sidebar-closed .app-sidebar {
+  flex: 0 0 72px;
+  width: 72px;
+  min-width: 72px;
+}
+
+/* The logo keeps its Siva identity without a dark tile in light mode. */
+html[data-theme="light"] .brand-logo,
+html[data-theme="light"] .brand-toggle.collapsed .brand-logo,
+html[data-theme="light"] .brand-toggle.collapsed:hover .brand-logo,
+html[data-theme="light"] .welcome-brand-mark,
+html[data-theme="light"] .prompts-welcome .welcome-brand-mark {
+  color: #15515b;
+  background: linear-gradient(145deg, #f8fcff 0%, #e7f2f8 58%, #dceaf4 100%);
+  border: 1px solid #c8dce9;
+  box-shadow: 0 5px 16px rgba(38, 75, 102, .10), inset 0 1px 0 rgba(255,255,255,.95);
+}
+html[data-theme="light"] .brand-logo .siva-trishul-emoji,
+html[data-theme="light"] .welcome-brand-mark .siva-trishul-emoji {
+  color: #98711f;
+  filter: none;
+}
+
+/* Compact cards arranged in exactly three rows: 2 cards, 3 cards, 2 cards. */
+.prompt-cards {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  width: min(100%, 720px);
+  margin-inline: auto;
+}
+.prompt-card {
+  grid-column: span 2;
+  min-width: 0;
+  min-height: 64px;
+  padding: 10px 12px;
+  gap: 9px;
+  border-radius: 11px;
+  text-align: left;
+}
+.prompt-card:nth-child(1),
+.prompt-card:nth-child(2),
+.prompt-card:nth-child(6),
+.prompt-card:nth-child(7) {
+  grid-column: span 3;
+}
+.prompt-card > svg {
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+}
+.prompt-card > span { min-width: 0; gap: 3px; }
+.prompt-card strong { font-size: 12px; line-height: 1.35; }
+.prompt-card small { font-size: 10.5px; line-height: 1.35; }
+
+@media (max-width: 700px) {
+  .app.sidebar-open .app-sidebar,
+  .sidebar-open .app-sidebar { flex-basis: 250px; width: 250px; min-width: 250px; }
+  .app.sidebar-closed .app-sidebar,
+  .sidebar-closed .app-sidebar { flex-basis: 62px; width: 62px; min-width: 62px; }
+  .prompt-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: min(100%, 520px);
+    gap: 8px;
+  }
+  .prompt-card,
+  .prompt-card:nth-child(n) {
+    grid-column: span 1;
+    min-height: 62px;
+    padding: 9px 10px;
+  }
+  .prompt-card:nth-child(7) { grid-column: 1 / -1; }
+}
+
+
+/* Siva welcome refinements: variable-width 2/3/2 suggestion rows and mode picker. */
+.prompt-cards {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 9px;
+  width: min(100%, 760px);
+  align-items: stretch;
+}
+.prompt-card {
+  grid-column: span 3;
+  min-width: 0;
+  min-height: 58px;
+  height: auto;
+  padding: 10px 12px;
+  gap: 9px;
+  border-radius: 10px;
+  text-align: left;
+  align-items: center;
+  font-size: 12px;
+}
+.prompt-card:nth-child(3),
+.prompt-card:nth-child(4),
+.prompt-card:nth-child(5) {
+  grid-column: span 2;
+}
+.prompt-card > svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+}
+.prompt-card > span {
+  min-width: 0;
+  gap: 3px;
+}
+.prompt-card strong {
+  font-size: 12px;
+  line-height: 1.3;
+}
+.prompt-card small {
+  font-size: 10px;
+  line-height: 1.35;
+}
+.mode-selector {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: min(100%, 760px);
+  margin: 0 0 14px;
+}
+.mode-select-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 70px;
+  padding: 13px 15px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+}
+.mode-select-card:hover {
+  transform: translateY(-1px);
+  border-color: #2998e4;
+  background: var(--panel-raised);
+}
+.mode-select-card > svg {
+  flex: 0 0 auto;
+  color: var(--blue);
+}
+.mode-select-card > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+.mode-select-card strong { font-size: 13px; line-height: 1.3; }
+.mode-select-card small { color: var(--muted); font-size: 11px; line-height: 1.4; }
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-cards {
+  width: min(100%, 760px);
+}
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(n + 5) {
+  display: none;
+}
+/* Light mode uses a light surface for the trishul logo instead of a dark tile. */
+html[data-theme="light"] .brand-logo,
+html[data-theme="light"] .brand-toggle.collapsed .brand-logo,
+html[data-theme="light"] .brand-toggle.collapsed:hover .brand-logo,
+html[data-theme="light"] .welcome-brand-mark,
+html[data-theme="light"] .prompts-welcome .welcome-brand-mark {
+  color: #087fd0;
+  background: linear-gradient(145deg, #f7fbff 0%, #e2f1ff 100%);
+  border-color: #c7e2f7;
+  box-shadow: 0 5px 16px rgba(22, 90, 145, .10), inset 0 1px 0 rgba(255,255,255,.95);
+}
+html[data-theme="light"] .siva-trishul-emoji {
+  color: #087fd0;
+  filter: drop-shadow(0 1px 1px rgba(8, 127, 208, .12));
+}
+@media (max-width: 700px) {
+  .prompt-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 8px;
+  }
+  .prompt-card,
+  .prompt-card:nth-child(3),
+  .prompt-card:nth-child(4),
+  .prompt-card:nth-child(5) {
+    grid-column: span 1;
+    min-height: 58px;
+    padding: 9px 10px;
+  }
+  .mode-selector {
+    grid-template-columns: 1fr;
+    width: 100%;
+    gap: 8px;
+  }
+  .mode-select-card { min-height: 62px; padding: 11px 13px; }
+}
+
+/* The general welcome page has four suggestions in a balanced 2-by-2 grid. */
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(3),
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(4) {
+  grid-column: span 3;
+}
+
+
+/* Composer refresh: prompt field on top, mode selector + send action below. */
+.input-area {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "message message"
+    "model send";
+  align-items: center;
+  gap: 8px 12px;
+  padding: 13px 14px 11px 17px;
+  border-radius: 20px;
+}
+.input-area textarea {
+  grid-area: message;
+  width: 100%;
+  min-height: 34px;
+  max-height: 150px;
+  padding: 4px 0;
+}
+.input-area > button {
+  grid-area: send;
+  justify-self: end;
+}
+.composer-model-row {
+  grid-area: model;
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.composer-model-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 36px;
+  max-width: 100%;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--panel-raised);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+.composer-model-trigger:hover,
+.composer-model-trigger.open { background: var(--blue-soft); }
+.composer-model-trigger > span:nth-child(2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.composer-model-spark {
+  display: grid;
+  place-items: center;
+  color: var(--blue);
+}
+.composer-model-trigger > svg { flex: 0 0 auto; color: var(--muted); }
+.composer-model-menu {
+  position: absolute;
+  z-index: 1000;
+  left: 0;
+  bottom: calc(100% + 9px);
+  width: 255px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: 0 14px 38px rgba(0,0,0,.22);
+}
+.composer-model-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 54px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.composer-model-menu button:hover { background: var(--panel-raised); }
+.composer-model-menu button > svg:first-child { flex: 0 0 auto; color: var(--blue); }
+.composer-model-menu button > svg:last-child { margin-left: auto; color: var(--blue); }
+.composer-model-menu button span { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 3px; }
+.composer-model-menu button strong { font-size: 12px; font-weight: 650; }
+.composer-model-menu button small { color: var(--muted); font-size: 10px; }
+
+/* Suggestion cards: one-line titles, compact height and softer corners. */
+.prompt-cards {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 9px;
+  width: min(100%, 760px);
+}
+.prompt-card {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  min-height: 43px;
+  height: 43px;
+  padding: 0 11px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+.prompt-card > span { min-width: 0; display: block; }
+.prompt-card strong {
+  display: block;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.prompt-card small { display: none !important; }
+.prompt-card > svg { flex: 0 0 auto; width: 16px; height: 16px; }
+
+/* BEU/Interview: row 1 has narrower cards, row 2 has three wider cards, row 3 is centered. */
+.beu-welcome .prompt-card:nth-child(1) { grid-column: 2 / span 3; grid-row: 1; }
+.beu-welcome .prompt-card:nth-child(2) { grid-column: 8 / span 3; grid-row: 1; }
+.beu-welcome .prompt-card:nth-child(3) { grid-column: 1 / span 4; grid-row: 2; }
+.beu-welcome .prompt-card:nth-child(4) { grid-column: 5 / span 4; grid-row: 2; }
+.beu-welcome .prompt-card:nth-child(5) { grid-column: 9 / span 4; grid-row: 2; }
+.beu-welcome .prompt-card:nth-child(6) { grid-column: 2 / span 3; grid-row: 3; }
+.beu-welcome .prompt-card:nth-child(7) { grid-column: 8 / span 3; grid-row: 3; }
+
+.interview-welcome .prompt-card:nth-child(1) { grid-column: 2 / span 3; grid-row: 1; }
+.interview-welcome .prompt-card:nth-child(2) { grid-column: 8 / span 3; grid-row: 1; }
+.interview-welcome .prompt-card:nth-child(3) { grid-column: 1 / span 4; grid-row: 2; }
+.interview-welcome .prompt-card:nth-child(4) { grid-column: 5 / span 4; grid-row: 2; }
+.interview-welcome .prompt-card:nth-child(5) { grid-column: 9 / span 4; grid-row: 2; }
+.interview-welcome .prompt-card:nth-child(6) { grid-column: 2 / span 3; grid-row: 3; }
+.interview-welcome .prompt-card:nth-child(7) { grid-column: 8 / span 3; grid-row: 3; }
+
+/* General welcome: four compact suggestions below the two mode choices. */
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-cards {
+  width: min(100%, 620px);
+}
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(1) { grid-column: 2 / span 4; grid-row: 1; }
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(2) { grid-column: 8 / span 4; grid-row: 1; }
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(3) { grid-column: 2 / span 4; grid-row: 2; }
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(4) { grid-column: 8 / span 4; grid-row: 2; }
+
+html[data-theme="light"] .composer-model-trigger { background: #eef3f9; color: #172438; }
+html[data-theme="light"] .composer-model-trigger:hover,
+html[data-theme="light"] .composer-model-trigger.open { background: #e3f1ff; }
+html[data-theme="light"] .composer-model-menu { background: #fff; border-color: #d8e1ed; box-shadow: 0 14px 38px rgba(28,51,78,.16); }
+html[data-theme="light"] .composer-model-menu button:hover { background: #f0f6fc; }
+
+@media (max-width: 700px) {
+  .prompt-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .beu-welcome .prompt-card,
+  .interview-welcome .prompt-card,
+  .welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card {
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+  .prompt-card { height: 42px; min-height: 42px; padding: 0 9px; }
+  .input-area { grid-template-columns: minmax(0, 1fr) auto; padding: 11px; }
+  .composer-model-trigger { max-width: 205px; font-size: 11px; }
+}
+
+/* Override generic composer-button styles for the mode picker and its menu. */
+.input-area .composer-model-trigger {
+  min-width: 0;
+  width: auto;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--panel-raised);
+  color: var(--text);
+  box-shadow: none;
+}
+.input-area .composer-model-trigger:hover,
+.input-area .composer-model-trigger.open { filter: none; background: var(--blue-soft); }
+.input-area .composer-model-menu button {
+  min-width: 0;
+  width: 100%;
+  height: auto;
+  min-height: 54px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 400;
+}
+.input-area .composer-model-menu button:hover { filter: none; background: var(--panel-raised); }
+
+
+/* Final requested layout: compact cards, no descriptions, tightly grouped rows. */
+.prompt-cards { gap: 4px; }
+.prompt-card { min-height: 40px; height: 40px; padding: 0 10px; border-radius: 12px; }
+.prompt-card small { display: none !important; }
+.prompt-card > span { min-width: 0; }
+.prompt-card strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.composer-model-menu { display: flex; flex-direction: column; gap: 2px; }
+.composer-model-menu button { border-radius: 10px; }
+.beu-welcome .prompt-card:nth-child(1), .interview-welcome .prompt-card:nth-child(1) { grid-column: 3 / span 3; grid-row: 1; }
+.beu-welcome .prompt-card:nth-child(2), .interview-welcome .prompt-card:nth-child(2) { grid-column: 6 / span 3; grid-row: 1; }
+.beu-welcome .prompt-card:nth-child(3), .interview-welcome .prompt-card:nth-child(3) { grid-column: 1 / span 4; grid-row: 2; }
+.beu-welcome .prompt-card:nth-child(4), .interview-welcome .prompt-card:nth-child(4) { grid-column: 5 / span 4; grid-row: 2; }
+.beu-welcome .prompt-card:nth-child(5), .interview-welcome .prompt-card:nth-child(5) { grid-column: 9 / span 4; grid-row: 2; }
+.beu-welcome .prompt-card:nth-child(6), .interview-welcome .prompt-card:nth-child(6) { grid-column: 3 / span 3; grid-row: 3; }
+.beu-welcome .prompt-card:nth-child(7), .interview-welcome .prompt-card:nth-child(7) { grid-column: 6 / span 3; grid-row: 3; }
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(1) { grid-column: 3 / span 4; grid-row: 1; }
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(2) { grid-column: 7 / span 4; grid-row: 1; }
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(3) { grid-column: 3 / span 4; grid-row: 2; }
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(4) { grid-column: 7 / span 4; grid-row: 2; }
+@media (max-width: 700px) { .prompt-cards { gap: 4px; } .prompt-card { height: 40px; min-height: 40px; border-radius: 11px; } }
+
+
+/* Latest request: welcome shows only normal suggestions; center suggestion rows on every mode. */
+.welcome .mode-selector { display: none !important; }
+.prompt-cards {
+  display: grid !important;
+  grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+  justify-content: center;
+  align-items: stretch;
+  justify-items: stretch;
+  width: min(100%, 720px) !important;
+  margin-inline: auto !important;
+  gap: 4px !important;
+}
+/* Row 1: two compact, centered cards. */
+.welcome .prompt-card:nth-child(1) { grid-column: 4 / span 3 !important; grid-row: 1 !important; }
+.welcome .prompt-card:nth-child(2) { grid-column: 7 / span 3 !important; grid-row: 1 !important; }
+/* Row 2: three wider cards across the centered grid. */
+.welcome .prompt-card:nth-child(3) { grid-column: 1 / span 4 !important; grid-row: 2 !important; }
+.welcome .prompt-card:nth-child(4) { grid-column: 5 / span 4 !important; grid-row: 2 !important; }
+.welcome .prompt-card:nth-child(5) { grid-column: 9 / span 4 !important; grid-row: 2 !important; }
+/* Row 3: two compact, centered cards. */
+.welcome .prompt-card:nth-child(6) { grid-column: 4 / span 3 !important; grid-row: 3 !important; }
+.welcome .prompt-card:nth-child(7) { grid-column: 7 / span 3 !important; grid-row: 3 !important; }
+.welcome .prompt-card { min-width: 0; width: 100%; justify-content: flex-start; }
+@media (max-width: 700px) {
+  .prompt-cards { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; width: 100% !important; }
+  .welcome .prompt-card:nth-child(n) { grid-column: auto !important; grid-row: auto !important; }
+}
+
+
+/* Compact ChatGPT-style composer: textarea grows upward while controls stay on one row. */
+.input-area {
+  display: grid !important;
+  grid-template-columns: 36px max-content minmax(0, 1fr) auto !important;
+  grid-template-areas: "message message message message" "plus model spacer send" !important;
+  align-items: center !important;
+  column-gap: 8px !important;
+  row-gap: 4px !important;
+  padding: 8px 9px 8px 11px !important;
+  border-radius: 22px !important;
+}
+.input-area textarea {
+  grid-area: message !important;
+  display: block;
+  min-height: 26px !important;
+  max-height: 150px !important;
+  height: 26px;
+  padding: 3px 2px !important;
+  margin: 0 !important;
+  line-height: 1.45 !important;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) transparent;
+}
+.input-area textarea::-webkit-scrollbar { width: 6px; }
+.input-area textarea::-webkit-scrollbar-track { background: transparent; }
+.input-area textarea::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 999px; }
+.input-area .composer-plus-button {
+  grid-area: plus !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 34px !important;
+  min-width: 34px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: var(--panel-raised) !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+}
+.input-area .composer-plus-button:hover { background: var(--blue-soft) !important; filter: none !important; }
+.input-area .composer-model-row {
+  grid-area: model !important;
+  min-width: 0;
+  align-self: center;
+}
+.input-area .composer-model-trigger {
+  height: 32px !important;
+  min-height: 32px !important;
+  max-width: min(220px, 38vw) !important;
+  padding-inline: 9px !important;
+  gap: 6px !important;
+  white-space: nowrap;
+}
+.input-area .composer-send-button {
+  grid-area: send !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  width: auto !important;
+  min-width: 36px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 0 11px !important;
+  border-radius: 999px !important;
+  justify-self: end !important;
+  white-space: nowrap;
+}
+.input-area .composer-send-button svg { flex: 0 0 auto; }
+.composer-model-menu { z-index: 30; }
+@media (max-width: 700px) {
+  .input-area {
+    grid-template-columns: 32px minmax(0, 1fr) auto !important;
+    grid-template-areas: "message message message" "plus model send" !important;
+    column-gap: 6px !important;
+    padding: 7px !important;
+  }
+  .input-area .composer-plus-button { width: 32px !important; min-width: 32px !important; height: 32px !important; min-height: 32px !important; }
+  .input-area .composer-model-trigger { max-width: 190px !important; font-size: 11px !important; }
+  .input-area .composer-send-button { height: 32px !important; min-height: 32px !important; padding-inline: 9px !important; }
+}
+
+
+/* Ensure all seven standard welcome suggestions remain visible (older rules hid cards 5-7). */
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(n) {
+  display: flex !important;
+}
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(1) { grid-column: 4 / span 3 !important; grid-row: 1 !important; }
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(2) { grid-column: 7 / span 3 !important; grid-row: 1 !important; }
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(3) { grid-column: 1 / span 4 !important; grid-row: 2 !important; }
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(4) { grid-column: 5 / span 4 !important; grid-row: 2 !important; }
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(5) { grid-column: 9 / span 4 !important; grid-row: 2 !important; }
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(6) { grid-column: 4 / span 3 !important; grid-row: 3 !important; }
+.welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(7) { grid-column: 7 / span 3 !important; grid-row: 3 !important; }
+@media (max-width: 700px) {
+  .welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(n) { grid-column: auto !important; grid-row: auto !important; display: flex !important; }
+}

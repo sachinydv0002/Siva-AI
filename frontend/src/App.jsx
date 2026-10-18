@@ -4,6 +4,8 @@ import {
   MessageSquare,
   Sparkles,
   Bot,
+  GraduationCap,
+  BriefcaseBusiness,
   Folder,
   Users,
   PanelLeftClose,
@@ -47,17 +49,19 @@ function TrishulMark({ size = 23 }) {
 const API_URL = 'http://127.0.0.1:8000/api/chat/stream'
 const SIDEBAR_STORAGE_KEY = 'siva-ai-nav-expanded'
 const THEME_STORAGE_KEY = 'siva-ai-theme'
+const APP_STATE_STORAGE_KEY = 'siva-ai-workspace-state-v1'
 
-const createChat = () => ({
+const createChat = (mode = 'chat') => ({
   id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
   title: 'New chat',
+  mode: ['beu', 'interview'].includes(mode) ? mode : 'chat',
   messages: [],
   updatedAt: Date.now(),
 })
 
 const NAV_ITEMS = [
-  { label: 'Prompts', Icon: Sparkles },
-  { label: 'Agents', Icon: Bot },
+  { label: 'BEU Mode', Icon: GraduationCap },
+  { label: 'Interview Mode', Icon: BriefcaseBusiness },
   { label: 'Files', Icon: Folder },
   { label: 'Teams', Icon: Users },
 ]
@@ -71,9 +75,41 @@ function getSavedSidebarState() {
   }
 }
 
+function loadSavedAppState() {
+  try {
+    const raw = window.localStorage.getItem(APP_STATE_STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed || !Array.isArray(parsed.chats)) return null
+    const chats = parsed.chats
+      .filter((chat) => chat && typeof chat.id === 'string')
+      .map((chat) => ({
+        ...chat,
+        mode: ['beu', 'interview'].includes(chat.mode) ? chat.mode : 'chat',
+        messages: Array.isArray(chat.messages) ? chat.messages : [],
+        title: typeof chat.title === 'string' ? chat.title : 'New chat',
+        updatedAt: Number(chat.updatedAt) || Date.now(),
+      }))
+    if (!chats.length) chats.push(createChat('chat'))
+    const activeChatId = chats.some((chat) => chat.id === parsed.activeChatId) ? parsed.activeChatId : chats[0].id
+    const activeChat = chats.find((chat) => chat.id === activeChatId) || chats[0]
+    const scrollTop = Number(parsed.scrollTop)
+    return {
+      chats,
+      activeChatId,
+      activeView: activeChat.mode,
+      selectedMode: activeChat.mode,
+      scrollTop: Number.isFinite(scrollTop) && scrollTop >= 0 ? scrollTop : 0,
+    }
+  } catch {
+    return null
+  }
+}
+
 function App() {
-  const [chats, setChats] = useState(() => [createChat()])
-  const [activeChatId, setActiveChatId] = useState(null)
+  const [initialAppState] = useState(loadSavedAppState)
+  const [chats, setChats] = useState(() => initialAppState?.chats ?? [createChat('chat')])
+  const [activeChatId, setActiveChatId] = useState(() => initialAppState?.activeChatId ?? null)
   const [message, setMessage] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
   const [isNavExpanded, setIsNavExpanded] = useState(getSavedSidebarState)
@@ -89,7 +125,9 @@ function App() {
   const [accountOpen, setAccountOpen] = useState(false)
   const [toast, setToast] = useState('')
   const [sidebarTooltip, setSidebarTooltip] = useState(null)
-  const [activeView, setActiveView] = useState('chat')
+  const [activeView, setActiveView] = useState(() => initialAppState?.activeView ?? 'chat')
+  const [modelMenuOpen, setModelMenuOpen] = useState(false)
+  const [selectedMode, setSelectedMode] = useState(() => initialAppState?.selectedMode ?? 'chat')
   const [renameOpen, setRenameOpen] = useState(false)
   const [renameDraft, setRenameDraft] = useState('')
   const [renameChatId, setRenameChatId] = useState(null)
@@ -102,11 +140,14 @@ function App() {
   const abortControllerRef = useRef(null)
   const requestInProgressRef = useRef(false)
   const shouldAutoScrollRef = useRef(true)
-  const activeChatIdRef = useRef(null)
+  const activeChatIdRef = useRef(initialAppState?.activeChatId ?? null)
   const toastTimerRef = useRef(null)
   const sidebarRef = useRef(null)
   const socialPopoverRef = useRef(null)
   const accountPopoverRef = useRef(null)
+  const modelPickerRef = useRef(null)
+  const scrollTopRef = useRef(initialAppState?.scrollTop ?? 0)
+  const hasRestoredScrollRef = useRef(false)
 
   const activeChat = chats.find((chat) => chat.id === activeChatId) ?? chats[0]
   const messages = activeChat?.messages ?? []
@@ -119,6 +160,9 @@ function App() {
       }
       if (!event.target.closest?.('.chat-history-wrap')) {
         setOpenChatMenuId(null)
+      }
+      if (modelPickerRef.current && !modelPickerRef.current.contains(event.target)) {
+        setModelMenuOpen(false)
       }
     }
     document.addEventListener('pointerdown', closeMenusOnOutsideClick)
@@ -200,15 +244,45 @@ function App() {
 
   useEffect(() => {
     if (!shouldAutoScrollRef.current) return
-    const frame = window.requestAnimationFrame(() => scrollToBottom('auto'))
+    const frame = window.requestAnimationFrame(() => {
+      const container = messagesContainerRef.current
+      if (!container) return
+      if (!hasRestoredScrollRef.current) {
+        if (initialAppState) {
+          container.scrollTop = Math.min(scrollTopRef.current, Math.max(0, container.scrollHeight - container.clientHeight))
+        } else {
+          scrollToBottom('auto')
+        }
+        hasRestoredScrollRef.current = true
+      } else {
+        scrollToBottom('auto')
+      }
+    })
     return () => window.cancelAnimationFrame(frame)
-  }, [messages, scrollToBottom])
+  }, [messages, scrollToBottom, initialAppState])
+
+  useEffect(() => {
+    const saveWorkspace = () => {
+      try {
+        window.localStorage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify({
+          chats,
+          activeChatId,
+          scrollTop: scrollTopRef.current,
+        }))
+      } catch {
+        // Keep the app usable if browser storage is unavailable or full.
+      }
+    }
+    saveWorkspace()
+    window.addEventListener('pagehide', saveWorkspace)
+    return () => window.removeEventListener('pagehide', saveWorkspace)
+  }, [chats, activeChatId])
 
   function handleMessagesScroll() {
     const container = messagesContainerRef.current
     if (!container) return
-    const distance =
-      container.scrollHeight - container.scrollTop - container.clientHeight
+    scrollTopRef.current = container.scrollTop
+    const distance = container.scrollHeight - container.scrollTop - container.clientHeight
     shouldAutoScrollRef.current = distance < 100
   }
 
@@ -261,7 +335,8 @@ function App() {
       setActiveChatId(nextChat.id)
       activeChatIdRef.current = nextChat.id
       setMessage('')
-      setActiveView('chat')
+      setActiveView(nextChat.mode ?? 'chat')
+      setSelectedMode(nextChat.mode ?? 'chat')
       abortControllerRef.current?.abort()
       abortControllerRef.current = null
       requestInProgressRef.current = false
@@ -279,8 +354,9 @@ function App() {
     setAccountOpen(false)
   }
 
-  function handleNewChat() {
-    setActiveView('chat')
+  function handleNewChat(nextView = 'chat') {
+    setActiveView(nextView)
+    setSelectedMode(nextView)
     setRenameOpen(false)
     abortControllerRef.current?.abort()
     abortControllerRef.current = null
@@ -288,16 +364,21 @@ function App() {
     setIsStreaming(false)
     setMessage('')
 
-    const chat = createChat()
+    const chat = createChat(nextView)
     setChats((previous) => [chat, ...previous])
     setActiveChatId(chat.id)
     activeChatIdRef.current = chat.id
+    scrollTopRef.current = 0
+    hasRestoredScrollRef.current = true
     shouldAutoScrollRef.current = true
     window.requestAnimationFrame(() => textareaRef.current?.focus())
   }
 
   function handleSelectChat(chatId) {
-    setActiveView('chat')
+    const selectedChat = chats.find((chat) => chat.id === chatId)
+    const nextMode = selectedChat?.mode ?? 'chat'
+    setActiveView(nextMode)
+    setSelectedMode(nextMode)
     setRenameOpen(false)
     if (activeChatIdRef.current !== chatId) {
       abortControllerRef.current?.abort()
@@ -309,6 +390,8 @@ function App() {
     setMessage('')
     setActiveChatId(chatId)
     activeChatIdRef.current = chatId
+    scrollTopRef.current = 0
+    hasRestoredScrollRef.current = true
     shouldAutoScrollRef.current = true
 
     window.requestAnimationFrame(() => {
@@ -318,7 +401,6 @@ function App() {
   }
 
   async function sendMessage(textOverride) {
-    setActiveView('chat')
     const userMessage = (
       typeof textOverride === 'string' ? textOverride : message
     ).trim()
@@ -334,7 +416,7 @@ function App() {
     setIsStreaming(true)
     shouldAutoScrollRef.current = true
 
-    if (textareaRef.current) textareaRef.current.style.height = '55px'
+    if (textareaRef.current) textareaRef.current.style.height = '26px'
 
     updateChatMessages(chatId, (previous) => [
       ...previous,
@@ -441,7 +523,7 @@ function App() {
   function handleChange(event) {
     const textarea = event.target
     setMessage(textarea.value)
-    textarea.style.height = '55px'
+    textarea.style.height = '26px'
     textarea.style.height = `${Math.min(textarea.scrollHeight, 150)}px`
   }
 
@@ -495,7 +577,7 @@ function App() {
 
         <div className="sidebar-scroll-area">
           <div className="sidebar-top">
-            <button type="button" className={`sidebar-new-chat ${activeView === 'chat' ? 'active' : ''}`} onClick={handleNewChat} data-tooltip="New chat" onMouseEnter={(event) => showSidebarTooltip(event, 'New chat')} onMouseLeave={() => setSidebarTooltip(null)} onFocus={(event) => showSidebarTooltip(event, 'New chat')} onBlur={() => setSidebarTooltip(null)}>
+            <button type="button" className={`sidebar-new-chat ${activeView === 'chat' ? 'active' : ''}`} onClick={() => handleNewChat('chat')} data-tooltip="New chat" onMouseEnter={(event) => showSidebarTooltip(event, 'New chat')} onMouseLeave={() => setSidebarTooltip(null)} onFocus={(event) => showSidebarTooltip(event, 'New chat')} onBlur={() => setSidebarTooltip(null)}>
               <Plus size={18} />
               {isNavExpanded && <span>New chat</span>}
             </button>
@@ -505,7 +587,12 @@ function App() {
                 <button
                   type="button"
                   key={label}
-                  className={`nav-rail-item ${label === 'Prompts' && activeView === 'prompts' ? 'active' : ''}`}
+                  className={`nav-rail-item ${
+                    (label === 'BEU Mode' && activeView === 'beu') ||
+                    (label === 'Interview Mode' && activeView === 'interview')
+                      ? 'active'
+                      : ''
+                  }`}
                   data-tooltip={label}
                   aria-label={label}
                   onMouseEnter={(event) => showSidebarTooltip(event, label)}
@@ -513,10 +600,12 @@ function App() {
                   onFocus={(event) => showSidebarTooltip(event, label)}
                   onBlur={() => setSidebarTooltip(null)}
                   onClick={() => {
-                    if (label === 'Prompts') {
-                      setActiveView('prompts')
+                    if (label === 'BEU Mode' || label === 'Interview Mode') {
+                      // Every mode gets its own fresh chat; never continue the previous conversation.
+                      handleNewChat(label === 'BEU Mode' ? 'beu' : 'interview')
                       setSocialOpen(false)
                       setAccountOpen(false)
+                      setSidebarTooltip(null)
                     } else {
                       showComingSoon(label)
                     }
@@ -718,27 +807,80 @@ function App() {
             onScroll={handleMessagesScroll}
           >
             <div className="messages-content">
-            {messages.length === 0 || activeView === 'prompts' ? (
-              <div className={`welcome ${activeView === 'prompts' ? 'prompts-welcome' : ''}`}>
+            {messages.length === 0 ? (
+              <div
+                className={`welcome ${
+                  activeView === 'beu'
+                      ? 'beu-welcome'
+                      : activeView === 'interview'
+                        ? 'interview-welcome'
+                        : ''
+                }`}
+              >
                 <div className="welcome-brand-mark" aria-hidden="true">
                   <TrishulMark size={25} strokeWidth={1.7} />
                 </div>
-                <h1>{activeView === 'prompts' ? 'Create with Prompts' : 'Welcome to Siva AI'}</h1>
-                <p>{activeView === 'prompts' ? 'Choose a starting point and Siva AI will help you craft a useful prompt.' : 'Your ideas, questions, and code — let’s work on them together.'}</p>
+                <h1>
+                  {activeView === 'beu'
+                    ? 'BEU Study Mode'
+                    : activeView === 'interview'
+                      ? 'Interview Mode'
+                      : 'Welcome to Siva AI'}
+                </h1>
+                <p>
+                  {activeView === 'beu'
+                    ? 'Bihar Engineering University ke syllabus, subjects, PYQs aur exam preparation ke liye dedicated study space.'
+                    : activeView === 'interview'
+                      ? 'Prepare for technical and HR interviews with structured practice, clear explanations, and actionable feedback.'
+                      : 'Your ideas, questions, and code — let’s work on them together.'}
+                </p>
                 <div className="prompt-cards">
-                  {activeView === 'prompts' ? (
+                  {activeView === 'beu' ? (
                     <>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Mere liye ek reusable, detailed prompt banao jo kisi topic ko beginner-friendly Hinglish mein samjhaye, examples aur short summary ke saath.')}>
-                        <Sparkles size={18} /><span><strong>Learning prompt</strong><small>Explain any topic clearly</small></span>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Main Bihar Engineering University (BEU) ke baare mein detail mein jaana chahta/chahti hoon. BEU ka overview, academic system, semester pattern, examination process, grading aur students ke liye useful official resources simple Hinglish mein samjhao. Jahan current official information zaroori ho, uncertainty clear batana aur mujhse course/branch poochhna.') }>
+                        <GraduationCap size={18} /><span><strong>BEU ke baare mein jaano</strong><small>University, semester aur exam system</small></span>
                       </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Mere liye ek reusable prompt likho jo kisi bhi topic ko simple Hinglish mein samjhaye, examples aur end mein short recap de. Topic placeholder bhi include karna.')}>
-                        <MessageSquare size={18} /><span><strong>Explanation prompt</strong><small>Kisi bhi topic ko aasaan banao</small></span>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Mujhe BEU ka syllabus samajhne aur organize karne mein help karo. Pehle meri course, branch, semester aur subject poochho. Phir syllabus ko unit-wise list karo, learning outcomes aur priority ke saath. Official syllabus document na ho to usse verified batakar present mat karna.') }>
+                        <MessageSquare size={18} /><span><strong>Syllabus & unit-wise topics</strong><small>Branch, semester aur subject ke hisaab se</small></span>
                       </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Mere liye ek professional writing prompt banao jo audience, tone, purpose aur length ke hisaab se polished content likhe. Reusable placeholders include karna.')}>
-                        <Pencil size={18} /><span><strong>Writing prompt</strong><small>Professional content likhne ke liye</small></span>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Mujhe BEU exam ki preparation karni hai. Pehle branch, semester, subjects aur exam date poochho. Phir daily timetable, unit-wise targets, revision slots aur mock-test plan banao; plan realistic rakhna.') }>
+                        <Pencil size={18} /><span><strong>Exam preparation plan</strong><small>Timetable, revision aur priority topics</small></span>
                       </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Mere liye ek study prompt banao jo kisi topic ko step-by-step sikhaye, examples de, phir 5 practice questions pooche aur mere answers par feedback de.')}>
-                        <Bot size={18} /><span><strong>Study prompt</strong><small>Step-by-step seekhne ke liye</small></span>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Mujhe BEU ke Previous Year Questions (PYQs) ki preparation karwao. Pehle branch, semester, subject aur available year/question paper poochho. PYQs ko topic-wise organize karo, repeated themes identify karo, aur agar actual papers available nahi hain to generated questions ko clearly practice questions kehna, real PYQs nahi.') }>
+                        <Bot size={18} /><span><strong>PYQ preparation</strong><small>Previous papers aur topic-wise practice</small></span>
+                      </button>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('BEU exam ke liye marks-oriented answer writing practice karwao. Subject, unit, marks (2/5/10/15) aur question poochho; phir answer ko definition, headings, diagram suggestion, examples aur conclusion ke format mein likho.') }>
+                        <Pencil size={18} /><span><strong>Answer writing practice</strong><small>2, 5, 10 ya 15 marks ke answers</small></span>
+                      </button>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Mujhe BEU ke liye subject-wise important concepts revise karwao. Pehle branch, semester aur subject poochho, phir unit-wise quick notes, key formulas/definitions aur short recap do. Kisi topic ke exam mein aane ki guarantee mat dena.') }>
+                        <Sparkles size={18} /><span><strong>Quick notes & revision</strong><small>Definitions, formulas aur short notes</small></span>
+                      </button>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Mera BEU subject-wise test lo. Pehle branch, semester, subject aur unit poochho. Phir ek-ek karke MCQ, short-answer aur long-answer questions poochho; mere jawab ke baad score, explanation aur weak topics batao.') }>
+                        <Code2 size={18} /><span><strong>Practice test</strong><small>Quiz, score aur weak-topic analysis</small></span>
+                      </button>
+                    </>
+                  ) : activeView === 'interview' ? (
+                    <>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Act as a technical interviewer for a CSE candidate. Ask my target role, experience level, and preferred topics, then conduct a realistic mock interview one question at a time. Give feedback after each answer.')}>
+                        <BriefcaseBusiness size={18} /><span><strong>Mock interview</strong><small>Realistic interview practice</small></span>
+                      </button>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare for a DSA interview. Ask my target company or difficulty level, then give one problem at a time. Let me attempt it before revealing hints or a solution; review time and space complexity.')}>
+                        <Code2 size={18} /><span><strong>DSA practice</strong><small>Problems, hints and complexity</small></span>
+                      </button>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Conduct an HR interview practice session. Ask one common HR question at a time, let me answer, then critique clarity, structure, relevance, and authenticity and help me improve it.')}>
+                        <Users size={18} /><span><strong>HR questions</strong><small>Build clear, authentic answers</small></span>
+                      </button>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare my project explanation for interviews. Ask me about the project, tech stack, my contribution, architecture, challenges, and outcomes, then help craft a concise and technically credible explanation.')}>
+                        <MessageSquare size={18} /><span><strong>Explain my project</strong><small>Present your work confidently</small></span>
+                      </button>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare a strong self-introduction for a fresher software engineering interview. Ask about my education, skills, projects, and goals, then help me make a natural 60-90 second answer.')}>
+                        <UserRound size={18} /><span><strong>Self introduction</strong><small>Build a clear fresher intro</small></span>
+                      </button>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Quiz me on core computer science interview topics such as DBMS, operating systems, computer networks, and OOP. Ask which topic and difficulty I prefer, then ask one question at a time and explain my mistakes.')}>
+                        <Bot size={18} /><span><strong>Core CS questions</strong><small>DBMS, OS, CN and OOP</small></span>
+                      </button>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Review my resume for a fresher software developer role. Ask me to paste the resume and target job description, then suggest specific improvements without inventing experience or skills.')}>
+                        <Folder size={18} /><span><strong>Resume review</strong><small>Improve resume for the role</small></span>
                       </button>
                     </>
                   ) : (
@@ -754,6 +896,15 @@ function App() {
                       </button>
                       <button type="button" className="prompt-card" onClick={() => sendMessage('Mere liye aaj ka ek practical study and coding plan banao, breaks ke saath.')}>
                         <MessageSquare size={18} /><span><strong>Plan my day</strong><small>Make a focused study plan</small></span>
+                      </button>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Explain a difficult topic in simple Hinglish with a small example, then ask me one question to check my understanding.')}>
+                        <GraduationCap size={18} /><span><strong>Explain a topic</strong><small>Simple explanation with example</small></span>
+                      </button>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me write, improve, or debug a Python program. First ask what I want the program to do, then explain the solution step by step.')}>
+                        <Code2 size={18} /><span><strong>Python help</strong><small>Write, understand or debug code</small></span>
+                      </button>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare for an upcoming exam. Ask my subject, exam date, syllabus progress, and daily available time, then create a practical revision plan.')}>
+                        <GraduationCap size={18} /><span><strong>Exam study plan</strong><small>Prepare with focused revision</small></span>
                       </button>
                     </>
                   )}
@@ -863,6 +1014,38 @@ function App() {
               sendMessage()
             }}
           >
+            <div className="composer-model-row" ref={modelPickerRef}>
+              <button
+                type="button"
+                className={`composer-model-trigger ${modelMenuOpen ? 'open' : ''}`}
+                onClick={() => setModelMenuOpen((open) => !open)}
+                aria-expanded={modelMenuOpen}
+                aria-haspopup="menu"
+              >
+                <span className="composer-model-spark"><Sparkles size={15} /></span>
+                <span>{selectedMode === 'beu' ? 'BEU Study Mode' : selectedMode === 'interview' ? 'Interview Mode' : 'Normal Mode'}</span>
+                <ChevronDown size={14} />
+              </button>
+              {modelMenuOpen && (
+                <div className="composer-model-menu" role="menu">
+                  <button type="button" role="menuitem" onClick={() => { setModelMenuOpen(false); handleNewChat('chat') }}>
+                    <MessageSquare size={17} />
+                    <span><strong>Normal Mode</strong><small>General chat and coding help</small></span>
+                    {selectedMode === 'chat' && <Check size={15} />}
+                  </button>
+                  <button type="button" role="menuitem" onClick={() => { setModelMenuOpen(false); handleNewChat('beu') }}>
+                    <GraduationCap size={17} />
+                    <span><strong>BEU Study Mode</strong><small>Syllabus, PYQs & exams</small></span>
+                    {selectedMode === 'beu' && <Check size={15} />}
+                  </button>
+                  <button type="button" role="menuitem" onClick={() => { setModelMenuOpen(false); handleNewChat('interview') }}>
+                    <BriefcaseBusiness size={17} />
+                    <span><strong>Interview Mode</strong><small>DSA, HR & mock interviews</small></span>
+                    {selectedMode === 'interview' && <Check size={15} />}
+                  </button>
+                </div>
+              )}
+            </div>
             <textarea
               ref={textareaRef}
               placeholder="Ask Siva anything..."
@@ -872,10 +1055,19 @@ function App() {
               rows={1}
               aria-label="Message Siva AI"
             />
+            <button
+              type="button"
+              className="composer-plus-button"
+              onClick={() => showComingSoon('Attachments')}
+              aria-label="Add attachment — coming soon"
+              title="Add attachment (Coming Soon)"
+            >
+              <Plus size={19} />
+            </button>
             {isStreaming ? (
               <button
                 type="button"
-                className="stop-btn"
+                className="stop-btn composer-send-button"
                 onClick={stopGeneration}
                 aria-label="Stop generating"
                 data-tooltip="Stop generating"
@@ -886,6 +1078,7 @@ function App() {
             ) : (
               <button
                 type="submit"
+                className="composer-send-button"
                 disabled={!message.trim()}
                 aria-label="Send message"
                 data-tooltip="Send message"
