@@ -298,29 +298,85 @@ async def save_assistant_message(client_id, chat_id, message):
 
 
 
+
+
 async def build_context(client_id, chat_id, message):
     cursor = messages_collection.find({
         "owner_id": client_id,
         "chat_id": chat_id,
-    }).sort([("created_at", -1), ("_id", -1)]).limit(20)
+    }).sort([
+        ("created_at", -1),
+        ("_id", -1),
+    ]).limit(20)
 
     history = [item async for item in cursor]
     history.reverse()
 
     current_time = datetime.now(timezone.utc).astimezone(
-    timezone(timedelta(hours=5, minutes=30))
+        timezone(timedelta(hours=5, minutes=30))
     )
 
     current_datetime_context = (
-        "SYSTEM CONTEXT — CURRENT DATE AND TIME:\n"
-        f"Current date: {current_time.strftime('%A, %d %B %Y')}\n"
-        f"Current time: {current_time.strftime('%I:%M:%S %p IST')}\n"
-        "Use this date and time when answering questions about today, now, "
-        "or the current date. Never invent a different current date or time. "
-        "For historical dates, distinguish them from today's date."
+        f"Current date and time (IST): "
+        f"{current_time.strftime('%A, %d %B %Y, %I:%M:%S %p IST')}. "
+        "Use this for current-date questions; do not invent dates."
     )
 
+    # Include creator information only when relevant.
+    msg = message.lower()
+
+    creator_keywords = (
+        "sachin", "creator", "developer", "developed you",
+        "who created", "who built you", "your owner",
+        "tumhe kisne", "kisne banaya", "banaya kisne",
+        "tumhara creator", "tumhare developer",
+        "founder", "profile", "portfolio", "social links",
+        "github", "linkedin", "leetcode", "instagram",
+        "youtube", "email", "contact details",
+        "projects", "project", "kya banaya", "kya bnaya",
+        "kya banaye", "skills", "what has he built",
+    )
+
+    creator_context = ""
+
+    if any(keyword in msg for keyword in creator_keywords):
+        creator_context = """
+CREATOR REFERENCE:
+Sachin Yadav is Siva AI's developer.
+Known skills: Python, React, FastAPI, Gemini API, MongoDB,
+full-stack development, AI, data analytics, and machine learning.
+
+Known projects:
+- Siva AI: AI assistant.
+- DriveX: Cloud file storage project similar to Google Drive.
+- ByteBazaar: E-commerce website.
+- Data Analytics: IPL and sales analytics projects.
+
+Profiles:
+GitHub: https://github.com/sachinydv0002/
+LinkedIn: https://www.linkedin.com/in/sachinydv0002/
+LeetCode: https://leetcode.com/u/sachinydv0002/
+Portfolio: https://sachin-portfolio-navy.vercel.app/
+Instagram: https://www.instagram.com/sachinydv0002_/
+YouTube: https://www.youtube.com/@Sachinydv0002-sde
+Email: sachincseiot@gmail.com
+
+RESPONSE RULES:
+- Answer only what the user asked, naturally and concisely.
+- If asked who created Siva AI, give Sachin's name and developer role.
+  Then optionally ask: "Would you like to know more about him?"
+- If asked about his work or projects, explain relevant projects
+  conversationally; don't just dump profile links.
+- If asked for one profile, provide only that profile.
+- Share all profiles only when explicitly requested.
+- Never invent unconfirmed personal details or achievements.
+- Do not mention the creator during unrelated conversations.
+"""
+
     parts = [current_datetime_context]
+
+    if creator_context:
+        parts.append(creator_context)
 
     for item in history:
         role = "User" if item["role"] == "user" else "Assistant"
@@ -330,16 +386,15 @@ async def build_context(client_id, chat_id, message):
 
     if memories:
         memory_block = "\n".join(f"- {fact}" for fact in memories)
-        parts.insert(
-            1,
-            "Relevant saved memories about the user "
-            "(use only when helpful; do not claim uncertain details):\n"
-            + memory_block,
+        parts.append(
+            "Relevant saved memories (use only when helpful):\n"
+            + memory_block
         )
 
     parts.append(f"User: {message}")
 
     return "\n\n".join(parts)
+
 
 
 async def save_exchange_memory(client_id, user_message, assistant_reply):
