@@ -2394,3 +2394,203 @@ html[data-theme="light"] .composer-model-menu button:hover { background: #f0f6fc
   .input-area textarea { max-height: 90px !important; }
   .message-row .message:has(.inline-message-editor) { width: fit-content; max-width: 100%; }
 }
+
+/* Sidebar: keep scrolling functional without showing the narrow navbar scrollbar. */
+.sidebar-scroll-area {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.sidebar-scroll-area::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Inline message edit actions: consistent contrast in dark and light themes. */
+.inline-message-edit-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 7px 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+.inline-edit-cancel {
+  background: var(--panel-raised, #101f33) !important;
+  color: var(--text, #eaf2ff) !important;
+  border-color: var(--border, #20334b) !important;
+}
+.inline-edit-cancel:hover {
+  background: var(--blue-soft, #102e4a) !important;
+  border-color: var(--blue, #1598f5) !important;
+}
+.inline-edit-save {
+  background: var(--blue, #1598f5) !important;
+  color: #ffffff !important;
+  border-color: var(--blue, #1598f5) !important;
+}
+.inline-edit-save:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.inline-edit-save:disabled {
+  opacity: .48;
+  cursor: not-allowed;
+}
+html[data-theme="light"] .inline-edit-cancel,
+:root[data-theme="light"] .inline-edit-cancel {
+  background: #f0f5fa !important;
+  color: #24364d !important;
+  border-color: #cbd7e5 !important;
+}
+html[data-theme="light"] .inline-edit-cancel:hover,
+:root[data-theme="light"] .inline-edit-cancel:hover {
+  background: #e4f2ff !important;
+  border-color: #87bce7 !important;
+}
+html[data-theme="light"] .inline-edit-save,
+:root[data-theme="light"] .inline-edit-save {
+  background: #087fd0 !important;
+  color: #ffffff !important;
+  border-color: #087fd0 !important;
+}
+
+/* Final edit-action palette: keep controls visually separate from cyan/blue chat bubbles. */
+.inline-message-edit-actions button {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+.inline-message-edit-actions .inline-edit-cancel {
+  background: #202936 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #536174 !important;
+}
+.inline-message-edit-actions .inline-edit-cancel:hover {
+  background: #303b4a !important;
+  border-color: #8795a8 !important;
+}
+.inline-message-edit-actions .inline-edit-save {
+  background: #6d28d9 !important;
+  color: #ffffff !important;
+  border: 1px solid #8b5cf6 !important;
+}
+.inline-message-edit-actions .inline-edit-save:hover:not(:disabled) {
+  background: #5b21b6 !important;
+  border-color: #a78bfa !important;
+  filter: none;
+}
+html[data-theme="light"] .inline-message-edit-actions .inline-edit-cancel,
+:root[data-theme="light"] .inline-message-edit-actions .inline-edit-cancel {
+  background: #ffffff !important;
+  color: #273449 !important;
+  border: 1px solid #b8c3d1 !important;
+}
+html[data-theme="light"] .inline-message-edit-actions .inline-edit-cancel:hover,
+:root[data-theme="light"] .inline-message-edit-actions .inline-edit-cancel:hover {
+  background: #edf1f6 !important;
+  border-color: #8795a8 !important;
+}
+html[data-theme="light"] .inline-message-edit-actions .inline-edit-save,
+:root[data-theme="light"] .inline-message-edit-actions .inline-edit-save {
+  background: #6d28d9 !important;
+  color: #ffffff !important;
+  border: 1px solid #6d28d9 !important;
+}
+html[data-theme="light"] .inline-message-edit-actions .inline-edit-save:hover:not(:disabled),
+:root[data-theme="light"] .inline-message-edit-actions .inline-edit-save:hover:not(:disabled) {
+  background: #5b21b6 !important;
+  border-color: #5b21b6 !important;
+}
+
+/* Inline message edit actions: matching neutral buttons in both themes,
+   deliberately distinct from the blue chat bubbles. */
+.inline-message-edit-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap;
+}
+.inline-message-edit-actions button,
+.inline-message-edit-actions .inline-edit-cancel,
+.inline-message-edit-actions .inline-edit-save {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 32px !important;
+  padding: 6px 13px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 9px !important;
+  background: var(--panel-raised, #263447) !important;
+  color: var(--text) !important;
+  font: inherit !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease;
+}
+.inline-message-edit-actions button:hover:not(:disabled) {
+  background: var(--border) !important;
+  filter: none !important;
+}
+.inline-message-edit-actions button:disabled {
+  opacity: .5 !important;
+  cursor: not-allowed !important;
+}
+html[data-theme="light"] .inline-message-edit-actions button,
+html[data-theme="light"] .inline-message-edit-actions .inline-edit-cancel,
+html[data-theme="light"] .inline-message-edit-actions .inline-edit-save,
+body[data-theme="light"] .inline-message-edit-actions button {
+  background: #edf1f6 !important;
+  color: #26364a !important;
+  border-color: #cbd5e1 !important;
+}
+html[data-theme="light"] .inline-message-edit-actions button:hover:not(:disabled),
+body[data-theme="light"] .inline-message-edit-actions button:hover:not(:disabled) {
+  background: #e0e7ef !important;
+}
+
+/* FINAL OVERRIDE: Cancel and Save & send must look identical in either theme. */
+.message-row .inline-message-edit-actions > button,
+.message-row .inline-message-edit-actions > button.inline-edit-cancel,
+.message-row .inline-message-edit-actions > button.inline-edit-save,
+html[data-theme="light"] .message-row .inline-message-edit-actions > button,
+html[data-theme="light"] .message-row .inline-message-edit-actions > button.inline-edit-cancel,
+html[data-theme="light"] .message-row .inline-message-edit-actions > button.inline-edit-save,
+body[data-theme="light"] .message-row .inline-message-edit-actions > button {
+  background: #e5e7eb !important;
+  color: #1f2937 !important;
+  border: 1px solid #9ca3af !important;
+  border-radius: 9px !important;
+  min-height: 34px !important;
+  padding: 7px 14px !important;
+  font: inherit !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+.message-row .inline-message-edit-actions > button:hover:not(:disabled),
+html[data-theme="light"] .message-row .inline-message-edit-actions > button:hover:not(:disabled),
+body[data-theme="light"] .message-row .inline-message-edit-actions > button:hover:not(:disabled) {
+  background: #d1d5db !important;
+  color: #111827 !important;
+  border-color: #6b7280 !important;
+  filter: none !important;
+}
+html:not([data-theme="light"]) .message-row .inline-message-edit-actions > button,
+:root:not([data-theme="light"]) .message-row .inline-message-edit-actions > button,
+body:not([data-theme="light"]) .message-row .inline-message-edit-actions > button {
+  background: #374151 !important;
+  color: #f9fafb !important;
+  border: 1px solid #6b7280 !important;
+}
+html:not([data-theme="light"]) .message-row .inline-message-edit-actions > button:hover:not(:disabled),
+:root:not([data-theme="light"]) .message-row .inline-message-edit-actions > button:hover:not(:disabled),
+body:not([data-theme="light"]) .message-row .inline-message-edit-actions > button:hover:not(:disabled) {
+  background: #4b5563 !important;
+  border-color: #9ca3af !important;
+}

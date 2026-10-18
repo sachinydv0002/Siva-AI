@@ -377,6 +377,17 @@ function App() {
     setAccountOpen(false)
   }
 
+  function handleModeChange(nextMode) {
+    // Change the mode on the current conversation; do not create a new chat.
+    setActiveView(nextMode)
+    setSelectedMode(nextMode)
+    if (activeChatId) {
+      setChats((previous) => previous.map((chat) =>
+        chat.id === activeChatId ? { ...chat, mode: nextMode, updatedAt: Date.now() } : chat,
+      ))
+    }
+  }
+
   function handleNewChat(nextView = 'chat') {
     setActiveView(nextView)
     setSelectedMode(nextView)
@@ -975,10 +986,14 @@ function App() {
                               onChange={(event) => setEditingMessage((current) => current ? { ...current, draft: event.target.value } : current)}
                               aria-label="Edit original message"
                               rows={Math.min(8, Math.max(1, (editingMessage.draft ?? editingMessage.originalText).split('\n').length))}
+                              onFocus={(event) => {
+                                const end = event.currentTarget.value.length
+                                event.currentTarget.setSelectionRange(end, end)
+                              }}
                             />
                             <div className="inline-message-edit-actions">
                               <button type="button" className="inline-edit-cancel" onClick={cancelMessageEdit}>Cancel</button>
-                              <button type="submit" className="inline-edit-save" disabled={!(editingMessage.draft ?? editingMessage.originalText).trim()}>Save &amp; send</button>
+                              <button type="submit" className="inline-edit-save" disabled={!(editingMessage.draft ?? editingMessage.originalText).trim()}>send</button>
                             </div>
                           </form>
                         ) : msg.sender === 'ai' ? (
@@ -1085,17 +1100,17 @@ function App() {
               </button>
               {modelMenuOpen && (
                 <div className="composer-model-menu" role="menu">
-                  <button type="button" role="menuitem" onClick={() => { setModelMenuOpen(false); handleNewChat('chat') }}>
+                  <button type="button" role="menuitem" onClick={() => { setModelMenuOpen(false); handleModeChange('chat') }}>
                     <MessageSquare size={17} />
                     <span><strong>Normal Mode</strong><small>General chat and coding help</small></span>
                     {selectedMode === 'chat' && <Check size={15} />}
                   </button>
-                  <button type="button" role="menuitem" onClick={() => { setModelMenuOpen(false); handleNewChat('beu') }}>
+                  <button type="button" role="menuitem" onClick={() => { setModelMenuOpen(false); handleModeChange('beu') }}>
                     <GraduationCap size={17} />
                     <span><strong>BEU Study Mode</strong><small>Syllabus, PYQs & exams</small></span>
                     {selectedMode === 'beu' && <Check size={15} />}
                   </button>
-                  <button type="button" role="menuitem" onClick={() => { setModelMenuOpen(false); handleNewChat('interview') }}>
+                  <button type="button" role="menuitem" onClick={() => { setModelMenuOpen(false); handleModeChange('interview') }}>
                     <BriefcaseBusiness size={17} />
                     <span><strong>Interview Mode</strong><small>DSA, HR & mock interviews</small></span>
                     {selectedMode === 'interview' && <Check size={15} />}
