@@ -300,6 +300,7 @@ async def save_assistant_message(client_id, chat_id, message):
 
 
 
+
 async def build_context(client_id, chat_id, message):
     # 1. Fetch recent chat history
     cursor = messages_collection.find({
@@ -387,6 +388,51 @@ RESPONSE RULES:
 - Avoid repeating the same introduction in follow-up messages.
 """
         parts.append(creator_context)
+
+    # 4.5. Detect BEU and Interview-related questions
+    interview_keywords = (
+        "interview preparation", "interview questions",
+        "mock interview", "job interview", "hr interview",
+        "technical interview", "interview practice",
+        "interview round", "interview tips",
+        "interview ki tayari", "interview ki taiyari",
+        "interview ke questions", "interview ki preparation",
+        "placement preparation",
+    )
+
+    beu_keywords = (
+        "beu", "bihar engineering university",
+        "b.tech cse semester", "btech cse semester",
+        "b.tech semester", "btech semester","btech",
+        "semester syllabus", "semester exam",
+        "semester notes", "semester question paper",
+        "semester pyq", "university syllabus","sem","semester",
+        "1st semester", "2nd semester", "3rd semester",
+        "4th semester", "5th semester", "6th semester",
+        "7th semester", "8th semester",
+        "first semester", "second semester",
+        "third semester", "fourth semester",
+        "fifth semester", "sixth semester",
+        "seventh semester", "eighth semester",
+    )
+
+    if any(keyword in msg for keyword in interview_keywords):
+        parts.append("""
+MODE GUIDANCE:
+This appears to be an interview-preparation question.
+Politely ask the user to switch to Interview Mode for focused
+interview preparation. Keep the response brief and do not answer
+the full interview question in Normal Mode.
+""")
+
+    elif any(keyword in msg for keyword in beu_keywords):
+        parts.append("""
+MODE GUIDANCE:
+This appears to be a BEU B.Tech CSE semester-related question.
+Politely ask the user to switch to BEU Mode for focused,
+semester-specific assistance. Keep the response brief and do not
+answer the full university-specific question in Normal Mode.
+""")
 
     # 5. Add recent conversation history
     for item in history:
