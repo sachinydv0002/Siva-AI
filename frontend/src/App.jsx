@@ -4,6 +4,7 @@ import {
   MessageSquare,
   Sparkles,
   Bot,
+  Brain,
   GraduationCap,
   BriefcaseBusiness,
   Folder,
@@ -169,6 +170,9 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [socialOpen, setSocialOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
+  const [memoriesOpen, setMemoriesOpen] = useState(false)
+  const [savedMemories, setSavedMemories] = useState([])
+  const [memoriesLoading, setMemoriesLoading] = useState(false)
   const [toast, setToast] = useState('')
   const [sidebarTooltip, setSidebarTooltip] = useState(null)
   const [activeView, setActiveView] = useState(() => initialAppState?.activeView ?? 'chat')
@@ -453,6 +457,34 @@ function App() {
     scrollTopRef.current = container.scrollTop
     const distance = container.scrollHeight - container.scrollTop - container.clientHeight
     shouldAutoScrollRef.current = distance < 100
+  }
+
+  async function openSavedMemories() {
+    setAccountOpen(false)
+    setMemoriesOpen(true)
+    setMemoriesLoading(true)
+    try {
+      const result = await historyRequest('/memories')
+      setSavedMemories(Array.isArray(result?.memories) ? result.memories : [])
+    } catch (error) {
+      console.error('Could not load saved memories:', error)
+      setToast('Could not load saved memories')
+    } finally {
+      setMemoriesLoading(false)
+    }
+  }
+
+  async function deleteSavedMemory(memoryId) {
+    try {
+      await historyRequest(`/memories/${encodeURIComponent(memoryId)}`, {
+        method: 'DELETE',
+      })
+      setSavedMemories((previous) => previous.filter((memory) => memory.id !== memoryId))
+      setToast('Memory deleted')
+    } catch (error) {
+      console.error('Could not delete saved memory:', error)
+      setToast('Could not delete memory')
+    }
   }
 
   async function copyText(text, successMessage = 'Copied to clipboard') {
@@ -1008,6 +1040,9 @@ function App() {
               <button type="button" onClick={() => showComingSoon('Profile')}>
                 <UserRound size={16} /> Profile
               </button>
+              <button type="button" onClick={openSavedMemories}>
+                <Brain size={16} /> Saved memory
+              </button>
               <button type="button" onClick={() => showComingSoon('Settings')}>
                 <Settings size={16} /> Settings
               </button>
@@ -1342,6 +1377,53 @@ function App() {
             <input id="chat-rename-input" autoFocus maxLength={80} value={renameDraft} onChange={(event) => setRenameDraft(event.target.value)} placeholder="Enter chat name" />
             <div className="rename-dialog-actions"><button type="button" className="rename-cancel" onClick={() => setRenameOpen(false)}>Cancel</button><button type="submit" className="rename-save" disabled={!renameDraft.trim()}>Save changes</button></div>
           </form>
+        </div>
+      )}
+
+      {memoriesOpen && (
+        <div
+          className="modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setMemoriesOpen(false)
+          }}
+        >
+          <div className="rename-dialog saved-memory-dialog" role="dialog" aria-modal="true" aria-labelledby="saved-memory-title">
+            <div className="rename-dialog-heading">
+              <div className="rename-dialog-icon"><Brain size={18} /></div>
+              <div>
+                <h2 id="saved-memory-title">Saved memory</h2>
+                <p>Facts Siva may use in future conversations.</p>
+              </div>
+              <button type="button" className="rename-close" onClick={() => setMemoriesOpen(false)} aria-label="Close saved memory">×</button>
+            </div>
+            {memoriesLoading ? (
+              <p>Loading saved memories…</p>
+            ) : savedMemories.length === 0 ? (
+              <p>No saved memories yet.</p>
+            ) : (
+              <div className="saved-memory-list">
+                {savedMemories.map((memory) => (
+                  <div className="saved-memory-item" key={memory.id}>
+                    <div>
+                      <p>{memory.fact}</p>
+                      <small>{memory.category || 'profile'}</small>
+                    </div>
+                    <button
+                      type="button"
+                      className="delete-confirm"
+                      onClick={() => deleteSavedMemory(memory.id)}
+                      aria-label={`Delete memory: ${memory.fact}`}
+                    >
+                      <Trash2 size={15} /> Delete
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="rename-dialog-actions">
+              <button type="button" className="rename-cancel" onClick={() => setMemoriesOpen(false)}>Close</button>
+            </div>
+          </div>
         </div>
       )}
 
