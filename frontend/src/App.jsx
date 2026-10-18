@@ -46,7 +46,43 @@ function TrishulMark({ size = 23 }) {
   )
 }
 
-const API_URL = 'http://127.0.0.1:8000/api/chat/stream'
+const API_BASE = 'http://127.0.0.1:8000/api'
+const API_URL = `${API_BASE}/chat/stream`
+const CLIENT_ID_STORAGE_KEY = 'siva-ai-client-id'
+
+function getClientId() {
+  try {
+    let clientId = window.localStorage.getItem(CLIENT_ID_STORAGE_KEY)
+    if (!clientId) {
+      clientId = window.crypto?.randomUUID?.()
+        ?? `siva-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`
+      window.localStorage.setItem(CLIENT_ID_STORAGE_KEY, clientId)
+    }
+    return clientId
+  } catch {
+    // A stable ID is needed across requests for this browser profile.
+    return `siva-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`
+  }
+}
+
+const CLIENT_ID = getClientId()
+
+async function historyRequest(path, options = {}) {
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Client-ID': CLIENT_ID,
+      ...(options.headers || {}),
+    },
+  })
+  if (!response.ok) {
+    const details = await response.text().catch(() => '')
+    throw new Error(`History API failed (${response.status}): ${details}`)
+  }
+  if (response.status === 204) return null
+  return response.json()
+}
 const SIDEBAR_STORAGE_KEY = 'siva-ai-nav-expanded'
 const THEME_STORAGE_KEY = 'siva-ai-theme'
 const APP_STATE_STORAGE_KEY = 'siva-ai-workspace-state-v1'
@@ -91,14 +127,23 @@ function loadSavedAppState() {
         updatedAt: Number(chat.updatedAt) || Date.now(),
       }))
     if (!chats.length) chats.push(createChat('chat'))
-    const activeChatId = chats.some((chat) => chat.id === parsed.activeChatId) ? parsed.activeChatId : chats[0].id
+    const activeChatId = chats.some((chat) => chat.id === parsed.activeChatId)
+      ? parsed.activeChatId
+      : chats[0].id
     const activeChat = chats.find((chat) => chat.id === activeChatId) || chats[0]
+    const validViews = ['chat', 'beu', 'interview', 'files', 'teams']
+    const savedView = validViews.includes(parsed.activeView)
+      ? parsed.activeView
+      : activeChat.mode
+    const savedMode = ['chat', 'beu', 'interview'].includes(parsed.selectedMode)
+      ? parsed.selectedMode
+      : (['chat', 'beu', 'interview'].includes(savedView) ? savedView : activeChat.mode)
     const scrollTop = Number(parsed.scrollTop)
     return {
       chats,
       activeChatId,
-      activeView: activeChat.mode,
-      selectedMode: activeChat.mode,
+      activeView: savedView,
+      selectedMode: savedMode,
       scrollTop: Number.isFinite(scrollTop) && scrollTop >= 0 ? scrollTop : 0,
     }
   } catch {
@@ -190,6 +235,105 @@ function App() {
     }
     document.addEventListener('pointerdown', closePopovers)
     return () => document.removeEventListener('pointerdown', closePopovers)
+  }, [])
+
+  // Load conversations from MongoDB. Migrate the existing browser history once
+  // when this client has no server-side chats yet.
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadServerHistory() {
+      try {
+        let result = await historyRequest('/chats')
+        let serverChats = Array.isArray(result?.chats) ? result.chats : []
+
+        if (serverChats.length === 0) {
+          const localChats = loadSavedAppState()?.chats ?? []
+          if (localChats.length > 0) {
+            await historyRequest('/chats/import', {
+              method: 'POST',
+              body: JSON.stringify({
+                chats: localChats.map((chat) => ({
+                  id: chat.id,
+                  title: chat.title || 'New chat',
+                  mode: ['beu', 'interview'].includes(chat.mode) ? chat.mode : 'chat',
+                  pinned: Boolean(chat.pinned),
+                  updatedAt: chat.updatedAt || Date.now(),
+                  messages: (chat.messages || []).map((msg) => ({
+                    sender: msg.sender === 'user' ? 'user' : 'ai',
+                    text: String(msg.text ?? ''),
+                  })),
+                })),
+              }),
+            })
+            result = await historyRequest('/chats')
+            serverChats = Array.isArray(result?.chats) ? result.chats : []
+          }
+        }
+
+        const completeChats = await Promise.all(
+          serverChats.map(async (chat) => {
+            const messageResult = await historyRequest(
+              `/chats/${encodeURIComponent(chat.id)}/messages`
+            )
+            return {
+              ...chat,
+              messages: Array.isArray(messageResult?.messages) ? messageResult.messages : [],
+              mode: ['beu', 'interview'].includes(chat.mode) ? chat.mode : 'chat',
+              updatedAt: Number(chat.updatedAt) || Date.now(),
+              title: chat.title || 'New chat',
+              pinned: Boolean(chat.pinned),
+            }
+          })
+        )
+
+        if (cancelled) return
+
+        // Preserve an empty local draft/welcome page (New Chat, BEU, or Interview)
+        // even when MongoDB already contains older conversations.
+        const savedWorkspace = loadSavedAppState()
+        const savedActiveChat = savedWorkspace?.chats?.find(
+          (chat) => chat.id === savedWorkspace.activeChatId
+        )
+        const isSavedWelcomePage = Boolean(
+          savedActiveChat &&
+          (!Array.isArray(savedActiveChat.messages) || savedActiveChat.messages.length === 0)
+        )
+        const welcomeChatMissingFromServer = isSavedWelcomePage &&
+          !completeChats.some((chat) => chat.id === savedActiveChat.id)
+
+        let nextChats = completeChats
+        if (welcomeChatMissingFromServer) {
+          nextChats = [savedActiveChat, ...completeChats]
+        }
+
+        if (nextChats.length === 0) return
+
+        setChats(nextChats)
+
+        if (welcomeChatMissingFromServer) {
+          setActiveChatId(savedActiveChat.id)
+          activeChatIdRef.current = savedActiveChat.id
+          setActiveView(savedWorkspace.activeView ?? savedActiveChat.mode ?? 'chat')
+          setSelectedMode(savedWorkspace.selectedMode ?? savedActiveChat.mode ?? 'chat')
+          return
+        }
+
+        const preferredId = nextChats.some((chat) => chat.id === activeChatIdRef.current)
+          ? activeChatIdRef.current
+          : nextChats[0].id
+        const preferredChat = nextChats.find((chat) => chat.id === preferredId) ?? nextChats[0]
+        setActiveChatId(preferredChat.id)
+        activeChatIdRef.current = preferredChat.id
+        setActiveView(savedWorkspace?.activeView ?? preferredChat.mode ?? 'chat')
+        setSelectedMode(savedWorkspace?.selectedMode ?? preferredChat.mode ?? 'chat')
+      } catch (error) {
+        console.error('Could not load MongoDB chat history:', error)
+      }
+    }
+
+    loadServerHistory()
+    return () => { cancelled = true }
   }, [])
 
   useEffect(() => {
@@ -290,6 +434,8 @@ function App() {
         window.localStorage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify({
           chats,
           activeChatId,
+          activeView,
+          selectedMode,
           scrollTop: scrollTopRef.current,
         }))
       } catch {
@@ -299,7 +445,7 @@ function App() {
     saveWorkspace()
     window.addEventListener('pagehide', saveWorkspace)
     return () => window.removeEventListener('pagehide', saveWorkspace)
-  }, [chats, activeChatId])
+  }, [chats, activeChatId, activeView, selectedMode])
 
   function handleMessagesScroll() {
     const container = messagesContainerRef.current
@@ -338,18 +484,30 @@ function App() {
     ))
     setRenameOpen(false)
     setRenameChatId(null)
+    historyRequest(`/chats/${encodeURIComponent(renameChatId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ title: renameDraft.trim() }),
+    }).catch((error) => console.error('Could not save chat title:', error))
   }
 
   function togglePinnedChat(chatId) {
+    const nextPinned = !Boolean(chats.find((chat) => chat.id === chatId)?.pinned)
     setChats((previous) => previous.map((chat) =>
-      chat.id === chatId ? { ...chat, pinned: !chat.pinned, updatedAt: Date.now() } : chat,
+      chat.id === chatId ? { ...chat, pinned: nextPinned, updatedAt: Date.now() } : chat,
     ))
-    setToast(chats.find((chat) => chat.id === chatId)?.pinned ? 'Chat unpinned' : 'Chat pinned')
+    historyRequest(`/chats/${encodeURIComponent(chatId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ pinned: nextPinned }),
+    }).catch((error) => console.error('Could not save pinned state:', error))
+    setToast(nextPinned ? 'Chat pinned' : 'Chat unpinned')
     if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current)
     toastTimerRef.current = window.setTimeout(() => setToast(''), 1800)
   }
 
   function deleteChat(chatId) {
+    historyRequest(`/chats/${encodeURIComponent(chatId)}`, {
+      method: 'DELETE',
+    }).catch((error) => console.error('Could not delete server chat:', error))
     const remaining = chats.filter((chat) => chat.id !== chatId)
     const nextChats = remaining.length ? remaining : [createChat()]
     setChats(nextChats)
@@ -478,8 +636,17 @@ function App() {
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMessage }),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Client-ID': CLIENT_ID,
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          chat_id: chatId,
+          mode: activeChat?.id === chatId
+            ? (chats.find((chat) => chat.id === chatId)?.mode ?? selectedMode ?? 'chat')
+            : (selectedMode ?? 'chat'),
+        }),
         signal: controller.signal,
       })
 
