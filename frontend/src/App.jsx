@@ -1132,7 +1132,7 @@ function App() {
               className="composer-plus-button"
               onClick={() => showComingSoon('Attachments')}
               aria-label="Add attachment — coming soon"
-              title="Add attachment (Coming Soon)"
+              // title="Add attachment (Coming Soon)"
             >
               <Plus size={19} />
             </button>
