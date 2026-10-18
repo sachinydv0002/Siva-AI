@@ -301,6 +301,7 @@ async def save_assistant_message(client_id, chat_id, message):
 
 
 async def build_context(client_id, chat_id, message):
+    # 1. Fetch recent chat history
     cursor = messages_collection.find({
         "owner_id": client_id,
         "chat_id": chat_id,
@@ -312,39 +313,45 @@ async def build_context(client_id, chat_id, message):
     history = [item async for item in cursor]
     history.reverse()
 
+    # 2. Current date and time (IST)
     current_time = datetime.now(timezone.utc).astimezone(
         timezone(timedelta(hours=5, minutes=30))
     )
 
-    current_datetime_context = (
+    parts = [
         f"Current date and time (IST): "
-        f"{current_time.strftime('%A, %d %B %Y, %I:%M:%S %p IST')}. "
-        "Use this for current-date questions; do not invent dates."
-    )
+        f"{current_time.strftime('%A, %d %B %Y, %I:%M %p')}. "
+        "Use this for current-date questions."
+    ]
 
-    # Include creator information only when relevant.
-    msg = message.lower()
+    # 3. Detect creator-related questions
+    msg = message.lower().strip()
 
     creator_keywords = (
         "sachin", "creator", "developer", "developed you",
         "who created", "who built you", "your owner",
         "tumhe kisne", "kisne banaya", "banaya kisne",
-        "tumhara creator", "tumhare developer",
-        "founder", "profile", "portfolio", "social links",
-        "github", "linkedin", "leetcode", "instagram",
-        "youtube", "email", "contact details",
+        "tumhara creator", "tumhare developer", "founder",
+        "portfolio", "github", "linkedin", "leetcode",
+        "instagram", "youtube", "email", "contact details",
         "projects", "project", "kya banaya", "kya bnaya",
         "kya banaye", "skills", "what has he built",
+        "what has he created", "about him", "about sachin",
+        "usne kya", "unhone kya", "unki profile",
+        "social profile", "social media",
     )
 
-    creator_context = ""
-
+    # 4. Add only relevant creator information
     if any(keyword in msg for keyword in creator_keywords):
         creator_context = """
-CREATOR REFERENCE:
-Sachin Yadav is Siva AI's developer.
-Known skills: Python, React, FastAPI, Gemini API, MongoDB,
-full-stack development, AI, data analytics, and machine learning.
+CREATOR PROFILE — SACHIN YADAV
+
+Sachin Yadav is the developer of Siva AI.
+Professional focus: Full-Stack Development, Backend Engineering,
+Software Development, Artificial Intelligence and Data Analytics.
+
+Technical expertise:
+Python, React, FastAPI, Gemini API and MongoDB.
 
 Known projects:
 - Siva AI: AI assistant.
@@ -352,7 +359,7 @@ Known projects:
 - ByteBazaar: E-commerce website.
 - Data Analytics: IPL and sales analytics projects.
 
-Profiles:
+Public profiles:
 GitHub: https://github.com/sachinydv0002/
 LinkedIn: https://www.linkedin.com/in/sachinydv0002/
 LeetCode: https://leetcode.com/u/sachinydv0002/
@@ -362,38 +369,48 @@ YouTube: https://www.youtube.com/@Sachinydv0002-sde
 Email: sachincseiot@gmail.com
 
 RESPONSE RULES:
-- Answer only what the user asked, naturally and concisely.
-- If asked who created Siva AI, give Sachin's name and developer role.
-  Then optionally ask: "Would you like to know more about him?"
+- Answer the exact question first; keep the response natural.
+- If asked who developed Siva AI, say Sachin Yadav is its developer.
+  Briefly mention his professional role, then ask if the user
+  would like to know more about him.
+- If asked what he does, describe his development focus and
+  relevant technical expertise.
 - If asked about his work or projects, explain relevant projects
-  conversationally; don't just dump profile links.
-- If asked for one profile, provide only that profile.
+  conversationally instead of replying with links alone.
+- If asked for one profile, share only that profile.
 - Share all profiles only when explicitly requested.
-- Never invent unconfirmed personal details or achievements.
-- Do not mention the creator during unrelated conversations.
+- You may mention the portfolio or GitHub when discussing projects,
+  but do not force links into every answer.
+- Do not invent education, employment history, achievements,
+  or unconfirmed project features.
+- Do not mention the creator in unrelated conversations.
+- Avoid repeating the same introduction in follow-up messages.
 """
-
-    parts = [current_datetime_context]
-
-    if creator_context:
         parts.append(creator_context)
 
+    # 5. Add recent conversation history
     for item in history:
         role = "User" if item["role"] == "user" else "Assistant"
         parts.append(f'{role}: {item["content"]}')
 
+    # 6. Add relevant saved memories
     memories = await get_relevant_memories(client_id, message)
 
     if memories:
-        memory_block = "\n".join(f"- {fact}" for fact in memories)
+        memory_block = "\n".join(
+            f"- {fact}" for fact in memories
+        )
         parts.append(
-            "Relevant saved memories (use only when helpful):\n"
+            "Relevant saved memories about the user "
+            "(use only when helpful; do not assume uncertain facts):\n"
             + memory_block
         )
 
+    # 7. Add current message
     parts.append(f"User: {message}")
 
     return "\n\n".join(parts)
+
 
 
 
