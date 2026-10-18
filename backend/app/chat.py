@@ -10,6 +10,8 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from bson import ObjectId
 
+from datetime import datetime, timezone, timedelta
+
 from database import chats_collection, messages_collection, memories_collection
 from app.ai_service import get_ai_response, stream_ai_response
 from app.memory_service import get_relevant_memories, extract_and_save_memories
@@ -295,29 +297,48 @@ async def save_assistant_message(client_id, chat_id, message):
     )
 
 
+
 async def build_context(client_id, chat_id, message):
     cursor = messages_collection.find({
         "owner_id": client_id,
         "chat_id": chat_id,
     }).sort([("created_at", -1), ("_id", -1)]).limit(20)
+
     history = [item async for item in cursor]
     history.reverse()
 
-    parts = []
+    current_time = datetime.now(timezone.utc).astimezone(
+    timezone(timedelta(hours=5, minutes=30))
+    )
+
+    current_datetime_context = (
+        "SYSTEM CONTEXT — CURRENT DATE AND TIME:\n"
+        f"Current date: {current_time.strftime('%A, %d %B %Y')}\n"
+        f"Current time: {current_time.strftime('%I:%M:%S %p IST')}\n"
+        "Use this date and time when answering questions about today, now, "
+        "or the current date. Never invent a different current date or time. "
+        "For historical dates, distinguish them from today's date."
+    )
+
+    parts = [current_datetime_context]
+
     for item in history:
         role = "User" if item["role"] == "user" else "Assistant"
         parts.append(f'{role}: {item["content"]}')
 
     memories = await get_relevant_memories(client_id, message)
+
     if memories:
         memory_block = "\n".join(f"- {fact}" for fact in memories)
         parts.insert(
-            0,
-            "Relevant saved memories about the user (use only when helpful; "
-            "do not claim uncertain details):\n" + memory_block,
+            1,
+            "Relevant saved memories about the user "
+            "(use only when helpful; do not claim uncertain details):\n"
+            + memory_block,
         )
 
     parts.append(f"User: {message}")
+
     return "\n\n".join(parts)
 
 
@@ -460,3 +481,5 @@ async def chat_stream(
             "X-Accel-Buffering": "no",
         },
     )
+
+
