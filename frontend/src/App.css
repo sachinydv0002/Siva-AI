@@ -2127,8 +2127,8 @@ html[data-theme="light"] .composer-model-menu button:hover { background: #f0f6fc
 /* Compact ChatGPT-style composer: textarea grows upward while controls stay on one row. */
 .input-area {
   display: grid !important;
-  grid-template-columns: 36px max-content minmax(0, 1fr) auto !important;
-  grid-template-areas: "message message message message" "plus model spacer send" !important;
+  grid-template-columns: 30px 36px max-content minmax(0, 1fr) auto !important;
+  grid-template-areas: "message message message message message" "cancel plus model spacer send" !important;
   align-items: center !important;
   column-gap: 8px !important;
   row-gap: 4px !important;
@@ -2151,6 +2151,23 @@ html[data-theme="light"] .composer-model-menu button:hover { background: #f0f6fc
 .input-area textarea::-webkit-scrollbar { width: 6px; }
 .input-area textarea::-webkit-scrollbar-track { background: transparent; }
 .input-area textarea::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 999px; }
+.input-area .composer-cancel-edit {
+  grid-area: cancel !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 28px !important;
+  min-width: 28px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  padding: 0 !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+}
+.input-area .composer-cancel-edit:hover { background: var(--panel-raised) !important; }
 .input-area .composer-plus-button {
   grid-area: plus !important;
   display: inline-flex !important;
@@ -2200,11 +2217,12 @@ html[data-theme="light"] .composer-model-menu button:hover { background: #f0f6fc
 .composer-model-menu { z-index: 30; }
 @media (max-width: 700px) {
   .input-area {
-    grid-template-columns: 32px minmax(0, 1fr) auto !important;
-    grid-template-areas: "message message message" "plus model send" !important;
+    grid-template-columns: 28px 32px minmax(0, 1fr) auto !important;
+    grid-template-areas: "message message message message" "cancel plus model send" !important;
     column-gap: 6px !important;
     padding: 7px !important;
   }
+  .input-area .composer-cancel-edit { width: 26px !important; min-width: 26px !important; height: 26px !important; min-height: 26px !important; }
   .input-area .composer-plus-button { width: 32px !important; min-width: 32px !important; height: 32px !important; min-height: 32px !important; }
   .input-area .composer-model-trigger { max-width: 190px !important; font-size: 11px !important; }
   .input-area .composer-send-button { height: 32px !important; min-height: 32px !important; padding-inline: 9px !important; }
@@ -2224,4 +2242,155 @@ html[data-theme="light"] .composer-model-menu button:hover { background: #f0f6fc
 .welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(7) { grid-column: 7 / span 3 !important; grid-row: 3 !important; }
 @media (max-width: 700px) {
   .welcome:not(.beu-welcome):not(.interview-welcome) .prompt-card:nth-child(n) { grid-column: auto !important; grid-row: auto !important; display: flex !important; }
+}
+
+
+/* Edit mode: place the cancel (×) control directly above Send on the right.
+   Keep + and the mode selector together on the left. */
+.input-area {
+  grid-template-columns: 36px max-content minmax(0, 1fr) auto !important;
+  grid-template-areas:
+    "message message message message"
+    "plus model spacer cancel"
+    "plus model spacer send" !important;
+  row-gap: 3px !important;
+}
+.input-area .composer-plus-button,
+.input-area .composer-model-row {
+  grid-row: 2 / span 2 !important;
+}
+.input-area .composer-cancel-edit {
+  grid-area: cancel !important;
+  justify-self: end !important;
+  align-self: end !important;
+}
+.input-area .composer-send-button {
+  grid-area: send !important;
+  justify-self: end !important;
+  align-self: start !important;
+}
+@media (max-width: 700px) {
+  .input-area {
+    grid-template-columns: 32px minmax(0, 1fr) auto !important;
+    grid-template-areas:
+      "message message message"
+      "plus model cancel"
+      "plus model send" !important;
+    column-gap: 6px !important;
+    row-gap: 3px !important;
+  }
+  .input-area .composer-plus-button,
+  .input-area .composer-model-row {
+    grid-row: 2 / span 2 !important;
+  }
+  .input-area .composer-cancel-edit {
+    grid-area: cancel !important;
+    justify-self: end !important;
+  }
+  .input-area .composer-send-button {
+    grid-area: send !important;
+    justify-self: end !important;
+  }
+}
+
+
+/* Final composer layout: edit-cancel sits directly above Send on the right;
+   attachment (+) and mode selector stay together at bottom-left. */
+.input-area {
+  grid-template-columns: 36px max-content minmax(0, 1fr) auto !important;
+  grid-template-rows: auto 30px 34px !important;
+  grid-template-areas:
+    "message message message message"
+    "plus model spacer cancel"
+    "plus model spacer send" !important;
+  align-items: center !important;
+  column-gap: 8px !important;
+  row-gap: 3px !important;
+}
+.input-area .composer-plus-button,
+.input-area .composer-model-row {
+  grid-row: 2 / 4 !important;
+  align-self: center !important;
+}
+.input-area .composer-cancel-edit {
+  grid-area: cancel !important;
+  justify-self: end !important;
+  align-self: center !important;
+  margin: 0 !important;
+}
+.input-area .composer-send-button {
+  grid-area: send !important;
+  justify-self: end !important;
+  align-self: center !important;
+  margin: 0 !important;
+}
+@media (max-width: 700px) {
+  .input-area {
+    grid-template-columns: 32px minmax(0, 1fr) auto !important;
+    grid-template-rows: auto 28px 32px !important;
+    grid-template-areas:
+      "message message message"
+      "plus model cancel"
+      "plus model send" !important;
+    column-gap: 6px !important;
+    row-gap: 3px !important;
+  }
+  .input-area .composer-plus-button,
+  .input-area .composer-model-row { grid-row: 2 / 4 !important; }
+}
+
+/* Restore the compact composer: editing controls belong to the original message, not the input. */
+.input-area {
+  grid-template-columns: 36px max-content minmax(0, 1fr) auto !important;
+  grid-template-rows: auto 34px !important;
+  grid-template-areas: "message message message message" "plus model spacer send" !important;
+  row-gap: 4px !important;
+  padding: 8px 9px 8px 11px !important;
+  border-radius: 20px !important;
+}
+.input-area textarea {
+  min-height: 26px !important;
+  height: 26px;
+  max-height: 100px !important;
+  padding: 2px 2px !important;
+}
+.input-area .composer-plus-button,
+.input-area .composer-model-row {
+  grid-row: 2 !important;
+  align-self: center !important;
+}
+.input-area .composer-send-button {
+  grid-row: 2 !important;
+  grid-area: send !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 10px !important;
+}
+.input-area .composer-cancel-edit { display: none !important; }
+/* Inline editing preserves the original message bubble's natural size. */
+.message-row .message:has(.inline-message-editor) {
+  width: fit-content;
+  max-width: min(100%, 760px);
+}
+.inline-message-editor { display: grid; gap: 8px; width: 100%; min-width: 0; }
+.inline-message-editor textarea {
+  display: block; width: 100%; min-width: 0; min-height: 0; height: auto;
+  field-sizing: content; max-height: 280px; resize: vertical; box-sizing: border-box;
+  padding: 8px 10px; border: 1px solid var(--border); border-radius: 12px;
+  background: var(--panel, #0b1727); color: var(--text, #f1f6ff);
+  font: inherit; line-height: 1.5; outline: none; overflow-y: auto;
+}
+.inline-message-editor textarea:focus { border-color: var(--blue, #168de2); }
+.inline-message-edit-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.inline-message-edit-actions button {
+  border-radius: 999px; padding: 6px 12px; min-height: 30px; font-size: 13px;
+  border: 1px solid var(--border); cursor: pointer;
+}
+.inline-edit-cancel { background: transparent; color: var(--text); }
+.inline-edit-save { background: var(--blue); color: white; border-color: transparent !important; }
+.inline-edit-save:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 700px) {
+  .input-area { grid-template-columns: 32px max-content minmax(0, 1fr) auto !important; grid-template-rows: auto 32px !important; grid-template-areas: "message message message message" "plus model spacer send" !important; padding: 7px !important; }
+  .input-area textarea { max-height: 90px !important; }
+  .message-row .message:has(.inline-message-editor) { width: fit-content; max-width: 100%; }
 }

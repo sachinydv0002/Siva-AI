@@ -111,6 +111,7 @@ function App() {
   const [chats, setChats] = useState(() => initialAppState?.chats ?? [createChat('chat')])
   const [activeChatId, setActiveChatId] = useState(() => initialAppState?.activeChatId ?? null)
   const [message, setMessage] = useState('')
+  const [editingMessage, setEditingMessage] = useState(null)
   const [isStreaming, setIsStreaming] = useState(false)
   const [isNavExpanded, setIsNavExpanded] = useState(getSavedSidebarState)
   const [theme, setTheme] = useState(() => {
@@ -215,6 +216,28 @@ function App() {
       abortControllerRef.current?.abort()
       if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current)
     }
+  }, [])
+
+  // Route ordinary typing to the composer even when focus is elsewhere on the page.
+  useEffect(() => {
+    function focusComposerForTyping(event) {
+      if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return
+      const target = event.target
+      const editable = target?.closest?.('input, textarea, select, [contenteditable="true"], [role="textbox"]')
+      if (editable || target?.closest?.('button, a, [role="menu"], [role="dialog"]')) return
+      if (event.key === 'Tab' || event.key === 'Escape' || event.key.startsWith('Arrow') || event.key === 'Shift') return
+      if (event.key === 'Backspace') {
+        event.preventDefault()
+        textareaRef.current?.focus()
+        setMessage((current) => current.slice(0, -1))
+      } else if (event.key.length === 1) {
+        event.preventDefault()
+        textareaRef.current?.focus()
+        setMessage((current) => current + event.key)
+      }
+    }
+    document.addEventListener('keydown', focusComposerForTyping)
+    return () => document.removeEventListener('keydown', focusComposerForTyping)
   }, [])
 
   const showComingSoon = useCallback((section) => {
@@ -363,6 +386,7 @@ function App() {
     requestInProgressRef.current = false
     setIsStreaming(false)
     setMessage('')
+    setEditingMessage(null)
 
     const chat = createChat(nextView)
     setChats((previous) => [chat, ...previous])
@@ -388,6 +412,7 @@ function App() {
     }
 
     setMessage('')
+    setEditingMessage(null)
     setActiveChatId(chatId)
     activeChatIdRef.current = chatId
     scrollTopRef.current = 0
@@ -514,6 +539,29 @@ function App() {
       }
       window.requestAnimationFrame(() => textareaRef.current?.focus())
     }
+  }
+
+  function cancelMessageEdit() {
+    setEditingMessage(null)
+  }
+
+  function submitEditedMessage(event) {
+    event?.preventDefault()
+    if (!editingMessage || isStreaming) return
+    const text = editingMessage.draft?.trim()
+    if (!text) return
+    const { chatId, index } = editingMessage
+    updateChatMessages(chatId, (previous) => previous.slice(0, index))
+    setEditingMessage(null)
+    setMessage('')
+    sendMessage(text)
+  }
+
+  function submitComposer(event) {
+    event?.preventDefault()
+    const text = message.trim()
+    if (!text || isStreaming) return
+    sendMessage(text)
   }
 
   function stopGeneration() {
@@ -919,7 +967,21 @@ function App() {
                   >
                     <article className={`message ${msg.sender}`}>
                       <div className="message-body">
-                        {msg.sender === 'ai' ? (
+                        {editingMessage?.chatId === activeChat?.id && editingMessage?.index === index ? (
+                          <form className="inline-message-editor" onSubmit={submitEditedMessage}>
+                            <textarea
+                              autoFocus
+                              value={editingMessage.draft ?? editingMessage.originalText}
+                              onChange={(event) => setEditingMessage((current) => current ? { ...current, draft: event.target.value } : current)}
+                              aria-label="Edit original message"
+                              rows={Math.min(8, Math.max(1, (editingMessage.draft ?? editingMessage.originalText).split('\n').length))}
+                            />
+                            <div className="inline-message-edit-actions">
+                              <button type="button" className="inline-edit-cancel" onClick={cancelMessageEdit}>Cancel</button>
+                              <button type="submit" className="inline-edit-save" disabled={!(editingMessage.draft ?? editingMessage.originalText).trim()}>Save &amp; send</button>
+                            </div>
+                          </form>
+                        ) : msg.sender === 'ai' ? (
                           msg.text ? (
                             <ReactMarkdown
                               components={{
@@ -954,7 +1016,7 @@ function App() {
                         )}
                       </div>
                     </article>
-                    {msg.text && (
+                    {msg.text && !(editingMessage?.chatId === activeChat?.id && editingMessage?.index === index) && (
                       <div className="message-actions">
                         <button
                           type="button"
@@ -969,9 +1031,7 @@ function App() {
                             type="button"
                             onClick={() => {
                               if (!activeChat?.id) return
-                              setMessage(msg.text)
-                              updateChatMessages(activeChat.id, (previous) => previous.slice(0, index))
-                              requestAnimationFrame(() => textareaRef.current?.focus())
+                              setEditingMessage({ chatId: activeChat.id, index, originalText: msg.text, draft: msg.text })
                             }}
                             aria-label="Edit message"
                             data-tooltip="Edit message"
@@ -1009,10 +1069,7 @@ function App() {
 
           <form
             className="input-area"
-            onSubmit={(event) => {
-              event.preventDefault()
-              sendMessage()
-            }}
+            onSubmit={submitComposer}
           >
             <div className="composer-model-row" ref={modelPickerRef}>
               <button
