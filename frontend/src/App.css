@@ -2615,3 +2615,75 @@ html[data-theme="light"] .saved-memory-item p { color: #172438; }
 html[data-theme="light"] .saved-memory-item small { background: #edf6ff; border-color: #d6e9f8; color: #28638d; }
 html[data-theme="light"] .saved-memory-dialog .rename-dialog-actions { border-color: #e5ebf2; }
 @media (max-width: 520px) { .saved-memory-dialog { padding: 17px; max-height: 84vh; } .saved-memory-item { padding: 11px; gap: 8px; } .saved-memory-item .delete-confirm { padding: 0 8px; } }
+
+
+
+/* Saved Memory - Custom Scrollbar */
+.saved-memory-list {
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #3b5876 #0b1726;
+  overscroll-behavior: contain;
+}
+
+/* Chrome, Edge, Safari */
+.saved-memory-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.saved-memory-list::-webkit-scrollbar-track {
+  background: #0b1726;
+  border-radius: 10px;
+}
+
+.saved-memory-list::-webkit-scrollbar-thumb {
+  background: #3b5876;
+  border-radius: 10px;
+  border: 1px solid #0b1726;
+}
+
+.saved-memory-list::-webkit-scrollbar-thumb:hover {
+  background: #5c7d9f;
+}
+
+/* Light theme */
+html[data-theme="light"] .saved-memory-list {
+  scrollbar-color: #b7c7d8 #eef2f7;
+}
+
+html[data-theme="light"] .saved-memory-list::-webkit-scrollbar-track {
+  background: #eef2f7;
+}
+
+html[data-theme="light"] .saved-memory-list::-webkit-scrollbar-thumb {
+  background: #b7c7d8;
+  border-color: #eef2f7;
+}
+
+
+
+/* Saved Memory Delete Button - Light Mode */
+html[data-theme="light"] .saved-memory-item .delete-confirm {
+  background: #fff1f2 !important;
+  color: #be123c !important;
+  border: 1px solid #e11d48 !important;
+  opacity: 1 !important;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+html[data-theme="light"] .saved-memory-item .delete-confirm svg {
+  color: #be123c !important;
+  opacity: 1 !important;
+}
+
+html[data-theme="light"] .saved-memory-item .delete-confirm:hover {
+  background: #be123c !important;
+  color: #ffffff !important;
+  border-color: #be123c !important;
+}
+
+html[data-theme="light"] .saved-memory-item .delete-confirm:hover svg {
+  color: #ffffff !important;
+}

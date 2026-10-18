@@ -154,6 +154,12 @@ function loadSavedAppState() {
 
 function App() {
   const [initialAppState] = useState(loadSavedAppState)
+  const initialSavedChat = initialAppState?.chats?.find(
+    (chat) => chat.id === initialAppState?.activeChatId
+  )
+  const initialPageWasWelcome = Boolean(
+    initialSavedChat && (!Array.isArray(initialSavedChat.messages) || initialSavedChat.messages.length === 0)
+  )
   const [chats, setChats] = useState(() => initialAppState?.chats ?? [createChat('chat')])
   const [activeChatId, setActiveChatId] = useState(() => initialAppState?.activeChatId ?? null)
   const [message, setMessage] = useState('')
@@ -175,9 +181,9 @@ function App() {
   const [memoriesLoading, setMemoriesLoading] = useState(false)
   const [toast, setToast] = useState('')
   const [sidebarTooltip, setSidebarTooltip] = useState(null)
-  const [activeView, setActiveView] = useState(() => initialAppState?.activeView ?? 'chat')
+  const [activeView, setActiveView] = useState(() => initialPageWasWelcome ? 'chat' : (initialAppState?.activeView ?? 'chat'))
   const [modelMenuOpen, setModelMenuOpen] = useState(false)
-  const [selectedMode, setSelectedMode] = useState(() => initialAppState?.selectedMode ?? 'chat')
+  const [selectedMode, setSelectedMode] = useState(() => initialPageWasWelcome ? 'chat' : (initialAppState?.selectedMode ?? 'chat'))
   const [renameOpen, setRenameOpen] = useState(false)
   const [renameDraft, setRenameDraft] = useState('')
   const [renameChatId, setRenameChatId] = useState(null)
@@ -293,44 +299,51 @@ function App() {
 
         if (cancelled) return
 
-        // Preserve an empty local draft/welcome page (New Chat, BEU, or Interview)
-        // even when MongoDB already contains older conversations.
+        // If the last page was any empty welcome page (New Chat, BEU, or
+        // Interview), refresh should start a fresh normal New Chat welcome page.
+        // Keep all actual conversations in history; only the empty draft is replaced.
         const savedWorkspace = loadSavedAppState()
         const savedActiveChat = savedWorkspace?.chats?.find(
           (chat) => chat.id === savedWorkspace.activeChatId
         )
-        const isSavedWelcomePage = Boolean(
+        const wasOnWelcomePage = Boolean(
           savedActiveChat &&
           (!Array.isArray(savedActiveChat.messages) || savedActiveChat.messages.length === 0)
         )
-        const welcomeChatMissingFromServer = isSavedWelcomePage &&
-          !completeChats.some((chat) => chat.id === savedActiveChat.id)
 
-        let nextChats = completeChats
-        if (welcomeChatMissingFromServer) {
-          nextChats = [savedActiveChat, ...completeChats]
-        }
-
-        if (nextChats.length === 0) return
-
-        setChats(nextChats)
-
-        if (welcomeChatMissingFromServer) {
-          setActiveChatId(savedActiveChat.id)
-          activeChatIdRef.current = savedActiveChat.id
-          setActiveView(savedWorkspace.activeView ?? savedActiveChat.mode ?? 'chat')
-          setSelectedMode(savedWorkspace.selectedMode ?? savedActiveChat.mode ?? 'chat')
+        if (wasOnWelcomePage) {
+          const freshWelcomeChat = createChat('chat')
+          setChats([freshWelcomeChat, ...completeChats.filter((chat) => chat.id !== savedActiveChat.id)])
+          setActiveChatId(freshWelcomeChat.id)
+          activeChatIdRef.current = freshWelcomeChat.id
+          setActiveView('chat')
+          setSelectedMode('chat')
+          setMessage('')
+          scrollTopRef.current = 0
+          hasRestoredScrollRef.current = true
+          shouldAutoScrollRef.current = true
           return
         }
 
-        const preferredId = nextChats.some((chat) => chat.id === activeChatIdRef.current)
+        if (completeChats.length === 0) {
+          const freshWelcomeChat = createChat('chat')
+          setChats([freshWelcomeChat])
+          setActiveChatId(freshWelcomeChat.id)
+          activeChatIdRef.current = freshWelcomeChat.id
+          setActiveView('chat')
+          setSelectedMode('chat')
+          return
+        }
+
+        setChats(completeChats)
+        const preferredId = completeChats.some((chat) => chat.id === activeChatIdRef.current)
           ? activeChatIdRef.current
-          : nextChats[0].id
-        const preferredChat = nextChats.find((chat) => chat.id === preferredId) ?? nextChats[0]
+          : completeChats[0].id
+        const preferredChat = completeChats.find((chat) => chat.id === preferredId) ?? completeChats[0]
         setActiveChatId(preferredChat.id)
         activeChatIdRef.current = preferredChat.id
-        setActiveView(savedWorkspace?.activeView ?? preferredChat.mode ?? 'chat')
-        setSelectedMode(savedWorkspace?.selectedMode ?? preferredChat.mode ?? 'chat')
+        setActiveView(preferredChat.mode ?? 'chat')
+        setSelectedMode(preferredChat.mode ?? 'chat')
       } catch (error) {
         console.error('Could not load MongoDB chat history:', error)
       }
