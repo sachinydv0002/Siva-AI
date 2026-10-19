@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
+import { useAuth, SignIn, SignUp } from '@clerk/react'
 import {
   MessageSquare,
   Sparkles,
@@ -68,12 +69,14 @@ function getClientId() {
 
 const CLIENT_ID = getClientId()
 
-async function historyRequest(path, options = {}) {
+async function historyRequest(path, options = {}, getToken = null) {
+  const token = getToken ? await getToken() : null
   const response = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
       'X-Client-ID': CLIENT_ID,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
   })
@@ -152,7 +155,12 @@ function loadSavedAppState() {
   }
 }
 
-function App() {
+function WorkspaceApp() {
+  const { isLoaded, isSignedIn, getToken } = useAuth()
+  const authenticatedHistoryRequest = useCallback(
+    (path, options = {}) => historyRequest(path, options, isSignedIn ? getToken : null),
+    [getToken, isSignedIn],
+  )
   const [initialAppState] = useState(loadSavedAppState)
   const initialSavedChat = initialAppState?.chats?.find(
     (chat) => chat.id === initialAppState?.activeChatId
@@ -247,43 +255,37 @@ function App() {
     return () => document.removeEventListener('pointerdown', closePopovers)
   }, [])
 
-  // Load conversations from MongoDB. Migrate the existing browser history once
-  // when this client has no server-side chats yet.
+  // Load server history only for a verified, signed-in Clerk user.
+  // Guest conversations remain temporary and are never migrated to an account.
   useEffect(() => {
     let cancelled = false
 
+    if (!isLoaded) return () => { cancelled = true }
+
+    if (!isSignedIn) {
+      const freshChat = createChat('chat')
+      setChats([freshChat])
+      setActiveChatId(freshChat.id)
+      activeChatIdRef.current = freshChat.id
+      setActiveView('chat')
+      setSelectedMode('chat')
+      setMessage('')
+      try {
+        window.localStorage.removeItem(APP_STATE_STORAGE_KEY)
+      } catch {
+        // The guest session still works if browser storage is unavailable.
+      }
+      return () => { cancelled = true }
+    }
+
     async function loadServerHistory() {
       try {
-        let result = await historyRequest('/chats')
-        let serverChats = Array.isArray(result?.chats) ? result.chats : []
-
-        if (serverChats.length === 0) {
-          const localChats = loadSavedAppState()?.chats ?? []
-          if (localChats.length > 0) {
-            await historyRequest('/chats/import', {
-              method: 'POST',
-              body: JSON.stringify({
-                chats: localChats.map((chat) => ({
-                  id: chat.id,
-                  title: chat.title || 'New chat',
-                  mode: ['beu', 'interview'].includes(chat.mode) ? chat.mode : 'chat',
-                  pinned: Boolean(chat.pinned),
-                  updatedAt: chat.updatedAt || Date.now(),
-                  messages: (chat.messages || []).map((msg) => ({
-                    sender: msg.sender === 'user' ? 'user' : 'ai',
-                    text: String(msg.text ?? ''),
-                  })),
-                })),
-              }),
-            })
-            result = await historyRequest('/chats')
-            serverChats = Array.isArray(result?.chats) ? result.chats : []
-          }
-        }
+        const result = await authenticatedHistoryRequest('/chats')
+        const serverChats = Array.isArray(result?.chats) ? result.chats : []
 
         const completeChats = await Promise.all(
           serverChats.map(async (chat) => {
-            const messageResult = await historyRequest(
+            const messageResult = await authenticatedHistoryRequest(
               `/chats/${encodeURIComponent(chat.id)}/messages`
             )
             return {
@@ -298,32 +300,6 @@ function App() {
         )
 
         if (cancelled) return
-
-        // If the last page was any empty welcome page (New Chat, BEU, or
-        // Interview), refresh should start a fresh normal New Chat welcome page.
-        // Keep all actual conversations in history; only the empty draft is replaced.
-        const savedWorkspace = loadSavedAppState()
-        const savedActiveChat = savedWorkspace?.chats?.find(
-          (chat) => chat.id === savedWorkspace.activeChatId
-        )
-        const wasOnWelcomePage = Boolean(
-          savedActiveChat &&
-          (!Array.isArray(savedActiveChat.messages) || savedActiveChat.messages.length === 0)
-        )
-
-        if (wasOnWelcomePage) {
-          const freshWelcomeChat = createChat('chat')
-          setChats([freshWelcomeChat, ...completeChats.filter((chat) => chat.id !== savedActiveChat.id)])
-          setActiveChatId(freshWelcomeChat.id)
-          activeChatIdRef.current = freshWelcomeChat.id
-          setActiveView('chat')
-          setSelectedMode('chat')
-          setMessage('')
-          scrollTopRef.current = 0
-          hasRestoredScrollRef.current = true
-          shouldAutoScrollRef.current = true
-          return
-        }
 
         if (completeChats.length === 0) {
           const freshWelcomeChat = createChat('chat')
@@ -351,7 +327,7 @@ function App() {
 
     loadServerHistory()
     return () => { cancelled = true }
-  }, [])
+  }, [isLoaded, isSignedIn, authenticatedHistoryRequest])
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
@@ -447,6 +423,10 @@ function App() {
 
   useEffect(() => {
     const saveWorkspace = () => {
+      if (!isLoaded || !isSignedIn) {
+        try { window.localStorage.removeItem(APP_STATE_STORAGE_KEY) } catch {}
+        return
+      }
       try {
         window.localStorage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify({
           chats,
@@ -462,7 +442,7 @@ function App() {
     saveWorkspace()
     window.addEventListener('pagehide', saveWorkspace)
     return () => window.removeEventListener('pagehide', saveWorkspace)
-  }, [chats, activeChatId, activeView, selectedMode])
+  }, [chats, activeChatId, activeView, selectedMode, isLoaded, isSignedIn])
 
   function handleMessagesScroll() {
     const container = messagesContainerRef.current
@@ -474,10 +454,16 @@ function App() {
 
   async function openSavedMemories() {
     setAccountOpen(false)
+    if (!isSignedIn) {
+      setToast('Log in to access saved memories')
+      if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current)
+      toastTimerRef.current = window.setTimeout(() => setToast(''), 2500)
+      return
+    }
     setMemoriesOpen(true)
     setMemoriesLoading(true)
     try {
-      const result = await historyRequest('/memories')
+      const result = await authenticatedHistoryRequest('/memories')
       setSavedMemories(Array.isArray(result?.memories) ? result.memories : [])
     } catch (error) {
       console.error('Could not load saved memories:', error)
@@ -489,7 +475,7 @@ function App() {
 
   async function deleteSavedMemory(memoryId) {
     try {
-      await historyRequest(`/memories/${encodeURIComponent(memoryId)}`, {
+      await authenticatedHistoryRequest(`/memories/${encodeURIComponent(memoryId)}`, {
         method: 'DELETE',
       })
       setSavedMemories((previous) => previous.filter((memory) => memory.id !== memoryId))
@@ -521,7 +507,7 @@ function App() {
 
   function saveChatRename(event) {
     event?.preventDefault()
-    if (!renameChatId || !renameDraft.trim()) return
+    if (!isSignedIn || !renameChatId || !renameDraft.trim()) return
     setChats((previous) => previous.map((chat) =>
       chat.id === renameChatId
         ? { ...chat, title: renameDraft.trim(), updatedAt: Date.now() }
@@ -529,18 +515,19 @@ function App() {
     ))
     setRenameOpen(false)
     setRenameChatId(null)
-    historyRequest(`/chats/${encodeURIComponent(renameChatId)}`, {
+    authenticatedHistoryRequest(`/chats/${encodeURIComponent(renameChatId)}`, {
       method: 'PATCH',
       body: JSON.stringify({ title: renameDraft.trim() }),
     }).catch((error) => console.error('Could not save chat title:', error))
   }
 
   function togglePinnedChat(chatId) {
+    if (!isSignedIn) return
     const nextPinned = !Boolean(chats.find((chat) => chat.id === chatId)?.pinned)
     setChats((previous) => previous.map((chat) =>
       chat.id === chatId ? { ...chat, pinned: nextPinned, updatedAt: Date.now() } : chat,
     ))
-    historyRequest(`/chats/${encodeURIComponent(chatId)}`, {
+    authenticatedHistoryRequest(`/chats/${encodeURIComponent(chatId)}`, {
       method: 'PATCH',
       body: JSON.stringify({ pinned: nextPinned }),
     }).catch((error) => console.error('Could not save pinned state:', error))
@@ -550,7 +537,8 @@ function App() {
   }
 
   function deleteChat(chatId) {
-    historyRequest(`/chats/${encodeURIComponent(chatId)}`, {
+    if (!isSignedIn) return
+    authenticatedHistoryRequest(`/chats/${encodeURIComponent(chatId)}`, {
       method: 'DELETE',
     }).catch((error) => console.error('Could not delete server chat:', error))
     const remaining = chats.filter((chat) => chat.id !== chatId)
@@ -679,11 +667,13 @@ function App() {
     )
 
     try {
+      const token = isSignedIn ? await getToken() : null
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Client-ID': CLIENT_ID,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           message: userMessage,
@@ -915,8 +905,16 @@ function App() {
           )}
 
           <div className="history-list">
-            {isNavExpanded &&
-              (filteredChats.length === 0 ? (
+            {isNavExpanded && (!isLoaded || !isSignedIn) ? (
+              <div className="history-auth-prompt">
+                <p>{isLoaded
+                  ? 'Sign in to save and revisit your chats.'
+                  : 'Sign in to save and revisit your chats. If the sign-in window does not open, check the Clerk publishable key and provider setup.'}</p>
+                <a href="/sign-in" className="history-auth-button">Log in</a>
+                <a href="/sign-up" className="history-auth-button secondary">Sign up</a>
+              </div>
+            ) : isNavExpanded && (
+              filteredChats.length === 0 ? (
                 <p className="empty-history">No matching conversations</p>
               ) : (
                 filteredChats.map((chat) => (
@@ -1480,6 +1478,38 @@ function App() {
       )}
     </div>
   )
+}
+
+function App() {
+  const path = window.location.pathname
+
+  if (path.startsWith('/sign-in')) {
+    return (
+      <div className="siva-auth-page">
+        <SignIn
+          routing="hash"
+          signUpUrl="/sign-up"
+          fallbackRedirectUrl="/"
+          signUpFallbackRedirectUrl="/"
+        />
+      </div>
+    )
+  }
+
+  if (path.startsWith('/sign-up')) {
+    return (
+      <div className="siva-auth-page">
+        <SignUp
+          routing="hash"
+          signInUrl="/sign-in"
+          fallbackRedirectUrl="/"
+          signInFallbackRedirectUrl="/"
+        />
+      </div>
+    )
+  }
+
+  return <WorkspaceApp />
 }
 
 export default App

@@ -5,7 +5,7 @@ import time
 from datetime import datetime, timezone
 from typing import Literal
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from bson import ObjectId
@@ -15,6 +15,7 @@ from datetime import datetime, timezone, timedelta
 from database import chats_collection, messages_collection, memories_collection
 from app.ai_service import get_ai_response, stream_ai_response
 from app.memory_service import get_relevant_memories, extract_and_save_memories
+from app.clerk_auth import get_current_user_id
 
 router = APIRouter()
 
@@ -23,16 +24,20 @@ def utc_now():
     return datetime.now(timezone.utc)
 
 
-def require_client_id(
-    x_client_id: str = Header(..., alias="X-Client-ID")
-) -> str:
-    client_id = x_client_id.strip()
-    if not client_id or len(client_id) > 128:
+def optional_user_id(request: Request) -> str | None:
+    """Return the verified Clerk user ID, or None for a guest request."""
+    return get_current_user_id(request)
+
+
+def require_authenticated_user(request: Request) -> str:
+    """Require a valid Clerk session for history and memory endpoints."""
+    user_id = get_current_user_id(request)
+    if not user_id:
         raise HTTPException(
-            status_code=400,
-            detail="Invalid X-Client-ID header",
+            status_code=401,
+            detail="Please sign in to access chat history and saved memories.",
         )
-    return client_id
+    return user_id
 
 
 class ChatRequest(BaseModel):
@@ -108,9 +113,8 @@ async def ensure_chat(client_id, chat_id, message, mode="chat"):
 @router.post("/chats")
 async def create_chat(
     request: CreateChatRequest,
-    client_id: str = Header(..., alias="X-Client-ID"),
+    client_id: str = Depends(require_authenticated_user),
 ):
-    client_id = require_client_id(client_id)
     now = utc_now()
     await chats_collection.update_one(
         {"_id": request.id, "owner_id": client_id},
@@ -132,9 +136,8 @@ async def create_chat(
 
 @router.get("/chats")
 async def list_chats(
-    client_id: str = Header(..., alias="X-Client-ID"),
+    client_id: str = Depends(require_authenticated_user),
 ):
-    client_id = require_client_id(client_id)
     cursor = chats_collection.find(
         {"owner_id": client_id}
     ).sort([("pinned", -1), ("updated_at", -1)])
@@ -144,9 +147,8 @@ async def list_chats(
 @router.get("/chats/{chat_id}/messages")
 async def list_messages(
     chat_id: str,
-    client_id: str = Header(..., alias="X-Client-ID"),
+    client_id: str = Depends(require_authenticated_user),
 ):
-    client_id = require_client_id(client_id)
     chat = await chats_collection.find_one({
         "_id": chat_id,
         "owner_id": client_id,
@@ -174,9 +176,8 @@ async def list_messages(
 async def update_chat(
     chat_id: str,
     update: ChatMetadataUpdate,
-    client_id: str = Header(..., alias="X-Client-ID"),
+    client_id: str = Depends(require_authenticated_user),
 ):
-    client_id = require_client_id(client_id)
     changes = update.model_dump(exclude_none=True)
     if "title" in changes:
         changes["title"] = changes["title"].strip()
@@ -198,9 +199,8 @@ async def update_chat(
 @router.delete("/chats/{chat_id}")
 async def delete_chat(
     chat_id: str,
-    client_id: str = Header(..., alias="X-Client-ID"),
+    client_id: str = Depends(require_authenticated_user),
 ):
-    client_id = require_client_id(client_id)
     result = await chats_collection.delete_one({
         "_id": chat_id,
         "owner_id": client_id,
@@ -218,9 +218,8 @@ async def delete_chat(
 @router.post("/chats/import")
 async def import_local_history(
     request: ImportRequest,
-    client_id: str = Header(..., alias="X-Client-ID"),
+    client_id: str = Depends(require_authenticated_user),
 ):
-    client_id = require_client_id(client_id)
 
     if await chats_collection.count_documents({"owner_id": client_id}, limit=1):
         return {"imported": 0, "skipped": True}
@@ -303,16 +302,17 @@ async def save_assistant_message(client_id, chat_id, message):
 
 async def build_context(client_id, chat_id, message):
     # 1. Fetch recent chat history
-    cursor = messages_collection.find({
-        "owner_id": client_id,
-        "chat_id": chat_id,
-    }).sort([
-        ("created_at", -1),
-        ("_id", -1),
-    ]).limit(20)
-
-    history = [item async for item in cursor]
-    history.reverse()
+    history = []
+    if client_id:
+        cursor = messages_collection.find({
+            "owner_id": client_id,
+            "chat_id": chat_id,
+        }).sort([
+            ("created_at", -1),
+            ("_id", -1),
+        ]).limit(20)
+        history = [item async for item in cursor]
+        history.reverse()
 
     # 2. Current date and time (IST)
     current_time = datetime.now(timezone.utc).astimezone(
@@ -440,7 +440,7 @@ answer the full university-specific question in Normal Mode.
         parts.append(f'{role}: {item["content"]}')
 
     # 6. Add relevant saved memories
-    memories = await get_relevant_memories(client_id, message)
+    memories = await get_relevant_memories(client_id, message) if client_id else []
 
     if memories:
         memory_block = "\n".join(
@@ -474,10 +474,9 @@ async def save_exchange_memory(client_id, user_message, assistant_reply):
 
 @router.get("/memories")
 async def list_memories(
-    client_id: str = Header(..., alias="X-Client-ID"),
+    client_id: str = Depends(require_authenticated_user),
 ):
     """List saved facts for this browser identity."""
-    client_id = require_client_id(client_id)
     cursor = memories_collection.find(
         {"owner_id": client_id}
     ).sort("updated_at", -1).limit(200)
@@ -497,10 +496,9 @@ async def list_memories(
 @router.delete("/memories/{memory_id}")
 async def delete_memory(
     memory_id: str,
-    client_id: str = Header(..., alias="X-Client-ID"),
+    client_id: str = Depends(require_authenticated_user),
 ):
     """Delete one memory belonging to this browser identity."""
-    client_id = require_client_id(client_id)
 
     try:
         object_id = ObjectId(memory_id)
@@ -521,21 +519,23 @@ async def delete_memory(
 @router.post("/chat")
 async def chat(
     request: ChatRequest,
-    client_id: str = Header(..., alias="X-Client-ID"),
+    client_id: str | None = Depends(optional_user_id),
 ):
-    client_id = require_client_id(client_id)
     message = request.message.strip()
     if not message:
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
     start = time.time()
-    await ensure_chat(client_id, request.chat_id, message, request.mode)
+    if client_id:
+        await ensure_chat(client_id, request.chat_id, message, request.mode)
     context = await build_context(client_id, request.chat_id, message)
-    await save_user_message(client_id, request.chat_id, message)
+    if client_id:
+        await save_user_message(client_id, request.chat_id, message)
 
     reply = await asyncio.to_thread(get_ai_response, context)
-    await save_assistant_message(client_id, request.chat_id, reply)
-    await save_exchange_memory(client_id, message, reply)
+    if client_id:
+        await save_assistant_message(client_id, request.chat_id, reply)
+        await save_exchange_memory(client_id, message, reply)
 
     print(
         f"[Performance] Total /api/chat request time: "
@@ -547,16 +547,17 @@ async def chat(
 @router.post("/chat/stream")
 async def chat_stream(
     request: ChatRequest,
-    client_id: str = Header(..., alias="X-Client-ID"),
+    client_id: str | None = Depends(optional_user_id),
 ):
-    client_id = require_client_id(client_id)
     message = request.message.strip()
     if not message:
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
-    await ensure_chat(client_id, request.chat_id, message, request.mode)
+    if client_id:
+        await ensure_chat(client_id, request.chat_id, message, request.mode)
     context = await build_context(client_id, request.chat_id, message)
-    await save_user_message(client_id, request.chat_id, message)
+    if client_id:
+        await save_user_message(client_id, request.chat_id, message)
 
     async def event_generator():
         chunks = queue.Queue()
@@ -587,7 +588,7 @@ async def chat_stream(
                 break
 
         reply = "".join(response_parts)
-        if reply and not failed:
+        if reply and not failed and client_id:
             await save_assistant_message(client_id, request.chat_id, reply)
             await save_exchange_memory(client_id, message, reply)
 

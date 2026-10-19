@@ -2596,94 +2596,65 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
 }
 
 
-/* Saved memory modal polish */
-.saved-memory-dialog { width: min(100%, 540px); max-height: min(78vh, 680px); display: flex; flex-direction: column; padding: 24px; overflow: hidden; }
-.saved-memory-dialog .rename-dialog-heading { margin-bottom: 18px; }
-.saved-memory-dialog .rename-dialog-heading > div:nth-child(2) { min-width: 0; }
-.saved-memory-dialog .rename-dialog-heading h2 { font-size: 17px; letter-spacing: -.2px; }
-.saved-memory-dialog .rename-dialog-heading p { margin-top: 5px; font-size: 12px; line-height: 1.45; }
-.saved-memory-list { display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; padding: 2px 4px 4px 0; }
-.saved-memory-item { display: flex; align-items: flex-start; gap: 14px; padding: 14px; border: 1px solid #263c54; border-radius: 12px; background: rgba(17, 36, 57, .72); }
-.saved-memory-item > div { min-width: 0; flex: 1; }
-.saved-memory-item p { margin: 0 0 9px; color: #e7effb; font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }
-.saved-memory-item small { display: inline-flex; align-items: center; padding: 4px 8px; border: 1px solid #2b4864; border-radius: 999px; background: #10283e; color: #91b7d8; font-size: 10px; text-transform: capitalize; }
-.saved-memory-item .delete-confirm { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; border: 1px solid rgba(239, 93, 107, .45) !important; border-radius: 8px; background: rgba(190, 47, 64, .13); color: #ff9aa4; font-size: 11px; font-weight: 600; cursor: pointer; }
-.saved-memory-item .delete-confirm:hover { background: #bd3445; color: #fff; }
-.saved-memory-dialog .rename-dialog-actions { padding-top: 12px; margin-top: 12px; border-top: 1px solid #20344a; }
-html[data-theme="light"] .saved-memory-item { background: #f8fafc; border-color: #e0e7ef; }
-html[data-theme="light"] .saved-memory-item p { color: #172438; }
-html[data-theme="light"] .saved-memory-item small { background: #edf6ff; border-color: #d6e9f8; color: #28638d; }
-html[data-theme="light"] .saved-memory-dialog .rename-dialog-actions { border-color: #e5ebf2; }
-@media (max-width: 520px) { .saved-memory-dialog { padding: 17px; max-height: 84vh; } .saved-memory-item { padding: 11px; gap: 8px; } .saved-memory-item .delete-confirm { padding: 0 8px; } }
-
-
-
-/* Saved Memory - Custom Scrollbar */
-.saved-memory-list {
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: #3b5876 #0b1726;
-  overscroll-behavior: contain;
+/* Clerk dedicated sign-in and sign-up pages */
+.siva-auth-page {
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #0b0b0f;
 }
 
-/* Chrome, Edge, Safari */
-.saved-memory-list::-webkit-scrollbar {
-  width: 6px;
+.siva-auth-page .cl-rootBox {
+  margin: 0 auto;
 }
 
-.saved-memory-list::-webkit-scrollbar-track {
-  background: #0b1726;
+.history-auth-prompt a.history-auth-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.history-auth-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}
+
+.history-auth-prompt p {
+  margin: 0 0 4px;
+  color: var(--text-secondary, #a1a1aa);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.history-auth-prompt .history-auth-button {
+  min-height: 38px;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.14));
   border-radius: 10px;
-}
-
-.saved-memory-list::-webkit-scrollbar-thumb {
-  background: #3b5876;
-  border-radius: 10px;
-  border: 1px solid #0b1726;
-}
-
-.saved-memory-list::-webkit-scrollbar-thumb:hover {
-  background: #5c7d9f;
-}
-
-/* Light theme */
-html[data-theme="light"] .saved-memory-list {
-  scrollbar-color: #b7c7d8 #eef2f7;
-}
-
-html[data-theme="light"] .saved-memory-list::-webkit-scrollbar-track {
-  background: #eef2f7;
-}
-
-html[data-theme="light"] .saved-memory-list::-webkit-scrollbar-thumb {
-  background: #b7c7d8;
-  border-color: #eef2f7;
-}
-
-
-
-/* Saved Memory Delete Button - Light Mode */
-html[data-theme="light"] .saved-memory-item .delete-confirm {
-  background: #fff1f2 !important;
-  color: #be123c !important;
-  border: 1px solid #e11d48 !important;
-  opacity: 1 !important;
+  padding: 9px 12px;
+  background: var(--accent, #f5f5f5);
+  color: var(--button-text, #111111);
+  font: inherit;
+  font-size: 13px;
   font-weight: 600;
-  box-shadow: none;
+  line-height: 1.2;
+  transition: opacity 0.15s ease, background 0.15s ease;
 }
 
-html[data-theme="light"] .saved-memory-item .delete-confirm svg {
-  color: #be123c !important;
-  opacity: 1 !important;
+.history-auth-prompt .history-auth-button:hover {
+  opacity: 0.88;
 }
 
-html[data-theme="light"] .saved-memory-item .delete-confirm:hover {
-  background: #be123c !important;
-  color: #ffffff !important;
-  border-color: #be123c !important;
-}
-
-html[data-theme="light"] .saved-memory-item .delete-confirm:hover svg {
-  color: #ffffff !important;
+.history-auth-prompt .history-auth-button.secondary {
+  background: transparent;
+  color: var(--text-primary, #f4f4f5);
 }
