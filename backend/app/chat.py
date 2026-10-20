@@ -1,21 +1,29 @@
+
 import asyncio
 import queue
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Literal
 
+from bson import ObjectId
+from pymongo.errors import DuplicateKeyError
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from bson import ObjectId
 
-from datetime import datetime, timezone, timedelta
-
-from database import chats_collection, messages_collection, memories_collection
+from database import (
+    chats_collection,
+    messages_collection,
+    memories_collection,
+)
 from app.ai_service import get_ai_response, stream_ai_response
-from app.memory_service import get_relevant_memories, extract_and_save_memories
+from app.memory_service import (
+    get_relevant_memories,
+    extract_and_save_memories,
+)
 from app.clerk_auth import get_current_user_id
+
 
 router = APIRouter()
 
@@ -25,18 +33,20 @@ def utc_now():
 
 
 def optional_user_id(request: Request) -> str | None:
-    """Return the verified Clerk user ID, or None for a guest request."""
+    """Return the verified Clerk user ID, or None for guests."""
     return get_current_user_id(request)
 
 
 def require_authenticated_user(request: Request) -> str:
-    """Require a valid Clerk session for history and memory endpoints."""
+    """Require a valid Clerk session for protected endpoints."""
     user_id = get_current_user_id(request)
+
     if not user_id:
         raise HTTPException(
             status_code=401,
             detail="Please sign in to access chat history and saved memories.",
         )
+
     return user_id
 
 
@@ -64,11 +74,17 @@ class ImportChat(BaseModel):
     mode: Literal["chat", "beu", "interview"] = "chat"
     pinned: bool = False
     updatedAt: int | None = None
-    messages: list[ImportMessage] = Field(default_factory=list, max_length=1000)
+    messages: list[ImportMessage] = Field(
+        default_factory=list,
+        max_length=1000,
+    )
 
 
 class ImportRequest(BaseModel):
-    chats: list[ImportChat] = Field(default_factory=list, max_length=200)
+    chats: list[ImportChat] = Field(
+        default_factory=list,
+        max_length=200,
+    )
 
 
 class ChatMetadataUpdate(BaseModel):
@@ -90,24 +106,40 @@ def serialize_chat(chat):
 
 async def ensure_chat(client_id, chat_id, message, mode="chat"):
     now = utc_now()
+
     title = message.strip().replace("\n", " ")
     title = title[:36] + ("…" if len(title) > 36 else "")
 
-    await chats_collection.update_one(
-        {"_id": chat_id, "owner_id": client_id},
-        {
-            "$setOnInsert": {
-                "_id": chat_id,
-                "owner_id": client_id,
-                "title": title or "New chat",
-                "mode": mode,
-                "pinned": False,
-                "created_at": now,
+    # Never update or overwrite another user's chat.
+    existing = await chats_collection.find_one({"_id": chat_id})
+
+    if existing and existing.get("owner_id") != client_id:
+        raise HTTPException(
+            status_code=409,
+            detail="This chat ID is already in use. Please start a new chat.",
+        )
+
+    try:
+        await chats_collection.update_one(
+            {"_id": chat_id, "owner_id": client_id},
+            {
+                "$setOnInsert": {
+                    "_id": chat_id,
+                    "owner_id": client_id,
+                    "title": title or "New chat",
+                    "mode": mode,
+                    "pinned": False,
+                    "created_at": now,
+                },
+                "$set": {"updated_at": now},
             },
-            "$set": {"updated_at": now},
-        },
-        upsert=True,
-    )
+            upsert=True,
+        )
+    except DuplicateKeyError as exc:
+        raise HTTPException(
+            status_code=409,
+            detail="This chat ID is already in use. Please start a new chat.",
+        ) from exc
 
 
 @router.post("/chats")
@@ -116,21 +148,34 @@ async def create_chat(
     client_id: str = Depends(require_authenticated_user),
 ):
     now = utc_now()
-    await chats_collection.update_one(
-        {"_id": request.id, "owner_id": client_id},
-        {
-            "$setOnInsert": {
-                "_id": request.id,
-                "owner_id": client_id,
-                "title": request.title,
-                "mode": request.mode,
-                "pinned": False,
-                "created_at": now,
-                "updated_at": now,
-            }
-        },
-        upsert=True,
-    )
+
+    existing = await chats_collection.find_one({"_id": request.id})
+
+    if existing:
+        if existing.get("owner_id") != client_id:
+            raise HTTPException(
+                status_code=409,
+                detail="This chat ID is already in use.",
+            )
+
+        return {"ok": True, "id": request.id}
+
+    try:
+        await chats_collection.insert_one({
+            "_id": request.id,
+            "owner_id": client_id,
+            "title": request.title.strip() or "New chat",
+            "mode": request.mode,
+            "pinned": False,
+            "created_at": now,
+            "updated_at": now,
+        })
+    except DuplicateKeyError as exc:
+        raise HTTPException(
+            status_code=409,
+            detail="This chat ID is already in use.",
+        ) from exc
+
     return {"ok": True, "id": request.id}
 
 
@@ -140,8 +185,14 @@ async def list_chats(
 ):
     cursor = chats_collection.find(
         {"owner_id": client_id}
-    ).sort([("pinned", -1), ("updated_at", -1)])
-    return {"chats": [serialize_chat(chat) async for chat in cursor]}
+    ).sort([
+        ("pinned", -1),
+        ("updated_at", -1),
+    ])
+
+    return {
+        "chats": [serialize_chat(chat) async for chat in cursor]
+    }
 
 
 @router.get("/chats/{chat_id}/messages")
@@ -153,15 +204,20 @@ async def list_messages(
         "_id": chat_id,
         "owner_id": client_id,
     })
+
     if not chat:
         raise HTTPException(status_code=404, detail="Chat not found")
 
     cursor = messages_collection.find({
         "chat_id": chat_id,
         "owner_id": client_id,
-    }).sort([("created_at", 1), ("_id", 1)])
+    }).sort([
+        ("created_at", 1),
+        ("_id", 1),
+    ])
 
     messages = []
+
     async for item in cursor:
         messages.append({
             "id": str(item.get("_id", "")),
@@ -169,6 +225,7 @@ async def list_messages(
             "text": item.get("content", ""),
             "createdAt": item.get("created_at", utc_now()).timestamp() * 1000,
         })
+
     return {"messages": messages}
 
 
@@ -179,20 +236,32 @@ async def update_chat(
     client_id: str = Depends(require_authenticated_user),
 ):
     changes = update.model_dump(exclude_none=True)
+
     if "title" in changes:
         changes["title"] = changes["title"].strip()
+
         if not changes["title"]:
-            raise HTTPException(status_code=400, detail="Chat title cannot be empty")
+            raise HTTPException(
+                status_code=400,
+                detail="Chat title cannot be empty",
+            )
+
     if not changes:
-        raise HTTPException(status_code=400, detail="No changes supplied")
+        raise HTTPException(
+            status_code=400,
+            detail="No changes supplied",
+        )
 
     changes["updated_at"] = utc_now()
+
     result = await chats_collection.update_one(
         {"_id": chat_id, "owner_id": client_id},
         {"$set": changes},
     )
+
     if not result.matched_count:
         raise HTTPException(status_code=404, detail="Chat not found")
+
     return {"ok": True}
 
 
@@ -205,6 +274,7 @@ async def delete_chat(
         "_id": chat_id,
         "owner_id": client_id,
     })
+
     if not result.deleted_count:
         raise HTTPException(status_code=404, detail="Chat not found")
 
@@ -212,6 +282,7 @@ async def delete_chat(
         "chat_id": chat_id,
         "owner_id": client_id,
     })
+
     return {"ok": True}
 
 
@@ -220,55 +291,94 @@ async def import_local_history(
     request: ImportRequest,
     client_id: str = Depends(require_authenticated_user),
 ):
-
-    if await chats_collection.count_documents({"owner_id": client_id}, limit=1):
+    if await chats_collection.count_documents(
+        {"owner_id": client_id},
+        limit=1,
+    ):
         return {"imported": 0, "skipped": True}
 
     imported = 0
+    skipped_ids = 0
+
     for chat in request.chats:
         now = utc_now()
+
         updated = (
-            datetime.fromtimestamp(chat.updatedAt / 1000, timezone.utc)
-            if chat.updatedAt else now
-        )
-        await chats_collection.update_one(
-            {"_id": chat.id, "owner_id": client_id},
-            {
-                "$setOnInsert": {
-                    "_id": chat.id,
-                    "owner_id": client_id,
-                    "title": chat.title,
-                    "mode": chat.mode,
-                    "pinned": chat.pinned,
-                    "created_at": now,
-                    "updated_at": updated,
-                }
-            },
-            upsert=True,
+            datetime.fromtimestamp(
+                chat.updatedAt / 1000,
+                timezone.utc,
+            )
+            if chat.updatedAt
+            else now
         )
 
-        existing = await messages_collection.count_documents(
-            {"owner_id": client_id, "chat_id": chat.id}, limit=1
+        # Skip IDs belonging to other users.
+        existing = await chats_collection.find_one({"_id": chat.id})
+
+        if existing and existing.get("owner_id") != client_id:
+            skipped_ids += 1
+            continue
+
+        try:
+            await chats_collection.update_one(
+                {"_id": chat.id, "owner_id": client_id},
+                {
+                    "$setOnInsert": {
+                        "_id": chat.id,
+                        "owner_id": client_id,
+                        "title": chat.title,
+                        "mode": chat.mode,
+                        "pinned": chat.pinned,
+                        "created_at": now,
+                        "updated_at": updated,
+                    }
+                },
+                upsert=True,
+            )
+        except DuplicateKeyError:
+            skipped_ids += 1
+            continue
+
+        existing_messages = await messages_collection.count_documents(
+            {"owner_id": client_id, "chat_id": chat.id},
+            limit=1,
         )
-        if chat.messages and not existing:
+
+        if chat.messages and not existing_messages:
             documents = []
+
             for message in chat.messages:
                 created = (
-                    datetime.fromtimestamp(message.createdAt / 1000, timezone.utc)
-                    if message.createdAt else now
+                    datetime.fromtimestamp(
+                        message.createdAt / 1000,
+                        timezone.utc,
+                    )
+                    if message.createdAt
+                    else now
                 )
+
                 documents.append({
                     "owner_id": client_id,
                     "chat_id": chat.id,
-                    "role": "user" if message.sender == "user" else "assistant",
+                    "role": (
+                        "user"
+                        if message.sender == "user"
+                        else "assistant"
+                    ),
                     "content": message.text,
                     "created_at": created,
                 })
+
             if documents:
                 await messages_collection.insert_many(documents)
+
         imported += 1
 
-    return {"imported": imported, "skipped": False}
+    return {
+        "imported": imported,
+        "skipped": False,
+        "skipped_ids": skipped_ids,
+    }
 
 
 async def save_user_message(client_id, chat_id, message):
@@ -283,6 +393,7 @@ async def save_user_message(client_id, chat_id, message):
 
 async def save_assistant_message(client_id, chat_id, message):
     now = utc_now()
+
     await messages_collection.insert_one({
         "owner_id": client_id,
         "chat_id": chat_id,
@@ -290,19 +401,18 @@ async def save_assistant_message(client_id, chat_id, message):
         "content": message,
         "created_at": now,
     })
+
     await chats_collection.update_one(
         {"_id": chat_id, "owner_id": client_id},
         {"$set": {"updated_at": now}},
     )
 
 
-
-
-
-
 async def build_context(client_id, chat_id, message):
-    # 1. Fetch recent chat history
+    parts = []
     history = []
+
+    # Guests do not read persistent conversation history.
     if client_id:
         cursor = messages_collection.find({
             "owner_id": client_id,
@@ -311,21 +421,20 @@ async def build_context(client_id, chat_id, message):
             ("created_at", -1),
             ("_id", -1),
         ]).limit(20)
+
         history = [item async for item in cursor]
         history.reverse()
 
-    # 2. Current date and time (IST)
     current_time = datetime.now(timezone.utc).astimezone(
         timezone(timedelta(hours=5, minutes=30))
     )
 
-    parts = [
-        f"Current date and time (IST): "
+    parts.append(
+        "Current date and time (IST): "
         f"{current_time.strftime('%A, %d %B %Y, %I:%M %p')}. "
         "Use this for current-date questions."
-    ]
+    )
 
-    # 3. Detect creator-related questions
     msg = message.lower().strip()
 
     creator_keywords = (
@@ -342,9 +451,8 @@ async def build_context(client_id, chat_id, message):
         "social profile", "social media",
     )
 
-    # 4. Add only relevant creator information
     if any(keyword in msg for keyword in creator_keywords):
-        creator_context = """
+        parts.append("""
 CREATOR PROFILE — SACHIN YADAV
 
 Sachin Yadav is the developer of Siva AI.
@@ -386,10 +494,8 @@ RESPONSE RULES:
   or unconfirmed project features.
 - Do not mention the creator in unrelated conversations.
 - Avoid repeating the same introduction in follow-up messages.
-"""
-        parts.append(creator_context)
+""")
 
-    # 4.5. Detect BEU and Interview-related questions
     interview_keywords = (
         "interview preparation", "interview questions",
         "mock interview", "job interview", "hr interview",
@@ -403,10 +509,10 @@ RESPONSE RULES:
     beu_keywords = (
         "beu", "bihar engineering university",
         "b.tech cse semester", "btech cse semester",
-        "b.tech semester", "btech semester","btech",
+        "b.tech semester", "btech semester", "btech",
         "semester syllabus", "semester exam",
         "semester notes", "semester question paper",
-        "semester pyq", "university syllabus","sem","semester",
+        "semester pyq", "university syllabus", "sem", "semester",
         "1st semester", "2nd semester", "3rd semester",
         "4th semester", "5th semester", "6th semester",
         "7th semester", "8th semester",
@@ -434,41 +540,43 @@ semester-specific assistance. Keep the response brief and do not
 answer the full university-specific question in Normal Mode.
 """)
 
-    # 5. Add recent conversation history
     for item in history:
         role = "User" if item["role"] == "user" else "Assistant"
-        parts.append(f'{role}: {item["content"]}')
+        parts.append(f'{role}: {item.get("content", "")}')
 
-    # 6. Add relevant saved memories
-    memories = await get_relevant_memories(client_id, message) if client_id else []
+    # Only signed-in users can retrieve saved memories.
+    memories = (
+        await get_relevant_memories(client_id, message)
+        if client_id
+        else []
+    )
 
     if memories:
-        memory_block = "\n".join(
-            f"- {fact}" for fact in memories
-        )
+        memory_block = "\n".join(f"- {fact}" for fact in memories)
         parts.append(
             "Relevant saved memories about the user "
             "(use only when helpful; do not assume uncertain facts):\n"
             + memory_block
         )
 
-    # 7. Add current message
     parts.append(f"User: {message}")
 
     return "\n\n".join(parts)
 
 
-
-
 async def save_exchange_memory(client_id, user_message, assistant_reply):
     try:
         count = await extract_and_save_memories(
-            client_id, user_message, assistant_reply
+            client_id,
+            user_message,
+            assistant_reply,
         )
+
         if count:
             print(f"[Memory] Saved {count} new memory fact(s).")
+
     except Exception as exc:
-        # Memory failure must never break the chat response.
+        # A memory failure must never break the chat response.
         print(f"[Memory] Save failed: {exc}")
 
 
@@ -476,12 +584,12 @@ async def save_exchange_memory(client_id, user_message, assistant_reply):
 async def list_memories(
     client_id: str = Depends(require_authenticated_user),
 ):
-    """List saved facts for this browser identity."""
     cursor = memories_collection.find(
         {"owner_id": client_id}
     ).sort("updated_at", -1).limit(200)
 
     memories = []
+
     async for item in cursor:
         memories.append({
             "id": str(item["_id"]),
@@ -498,12 +606,13 @@ async def delete_memory(
     memory_id: str,
     client_id: str = Depends(require_authenticated_user),
 ):
-    """Delete one memory belonging to this browser identity."""
-
     try:
         object_id = ObjectId(memory_id)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid memory ID")
+    except Exception as exc:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid memory ID",
+        ) from exc
 
     result = await memories_collection.delete_one({
         "_id": object_id,
@@ -522,25 +631,51 @@ async def chat(
     client_id: str | None = Depends(optional_user_id),
 ):
     message = request.message.strip()
+
     if not message:
-        raise HTTPException(status_code=400, detail="Message cannot be empty")
+        raise HTTPException(
+            status_code=400,
+            detail="Message cannot be empty",
+        )
 
     start = time.time()
+
     if client_id:
-        await ensure_chat(client_id, request.chat_id, message, request.mode)
-    context = await build_context(client_id, request.chat_id, message)
+        await ensure_chat(
+            client_id,
+            request.chat_id,
+            message,
+            request.mode,
+        )
+
+    context = await build_context(
+        client_id,
+        request.chat_id,
+        message,
+    )
+
     if client_id:
-        await save_user_message(client_id, request.chat_id, message)
+        await save_user_message(
+            client_id,
+            request.chat_id,
+            message,
+        )
 
     reply = await asyncio.to_thread(get_ai_response, context)
+
     if client_id:
-        await save_assistant_message(client_id, request.chat_id, reply)
+        await save_assistant_message(
+            client_id,
+            request.chat_id,
+            reply,
+        )
         await save_exchange_memory(client_id, message, reply)
 
     print(
-        f"[Performance] Total /api/chat request time: "
+        "[Performance] Total /api/chat request time: "
         f"{time.time() - start:.4f}s"
     )
+
     return {"reply": reply}
 
 
@@ -550,14 +685,33 @@ async def chat_stream(
     client_id: str | None = Depends(optional_user_id),
 ):
     message = request.message.strip()
+
     if not message:
-        raise HTTPException(status_code=400, detail="Message cannot be empty")
+        raise HTTPException(
+            status_code=400,
+            detail="Message cannot be empty",
+        )
 
     if client_id:
-        await ensure_chat(client_id, request.chat_id, message, request.mode)
-    context = await build_context(client_id, request.chat_id, message)
+        await ensure_chat(
+            client_id,
+            request.chat_id,
+            message,
+            request.mode,
+        )
+
+    context = await build_context(
+        client_id,
+        request.chat_id,
+        message,
+    )
+
     if client_id:
-        await save_user_message(client_id, request.chat_id, message)
+        await save_user_message(
+            client_id,
+            request.chat_id,
+            message,
+        )
 
     async def event_generator():
         chunks = queue.Queue()
@@ -573,24 +727,39 @@ async def chat_stream(
             finally:
                 chunks.put(("done", None))
 
-        threading.Thread(target=produce, daemon=True).start()
+        threading.Thread(
+            target=produce,
+            daemon=True,
+        ).start()
 
         while True:
             kind, value = await asyncio.to_thread(chunks.get)
+
             if kind == "chunk":
                 response_parts.append(value)
                 yield value
+
             elif kind == "error":
                 failed = True
                 print(f"[Streaming error] {value}")
                 yield "\n\n**Unable to get a response. Please try again.**"
+
             else:
                 break
 
         reply = "".join(response_parts)
+
         if reply and not failed and client_id:
-            await save_assistant_message(client_id, request.chat_id, reply)
-            await save_exchange_memory(client_id, message, reply)
+            await save_assistant_message(
+                client_id,
+                request.chat_id,
+                reply,
+            )
+            await save_exchange_memory(
+                client_id,
+                message,
+                reply,
+            )
 
     return StreamingResponse(
         event_generator(),
@@ -600,5 +769,3 @@ async def chat_stream(
             "X-Accel-Buffering": "no",
         },
     )
-
-

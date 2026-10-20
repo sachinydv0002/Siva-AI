@@ -1,5 +1,6 @@
 
 import os
+from pathlib import Path
 
 import httpx
 from dotenv import load_dotenv
@@ -7,7 +8,8 @@ from fastapi import HTTPException, Request
 from clerk_backend_api import Clerk
 from clerk_backend_api.security.types import AuthenticateRequestOptions
 
-load_dotenv()
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+load_dotenv(BACKEND_DIR / ".env")
 
 CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY")
 CLERK_AUTHORIZED_PARTY = os.getenv(
@@ -19,7 +21,7 @@ CLERK_AUTHORIZED_PARTY = os.getenv(
 def get_clerk_client():
     if not CLERK_SECRET_KEY:
         raise RuntimeError(
-            "CLERK_SECRET_KEY is missing from backend .env"
+            "CLERK_SECRET_KEY is missing from backend/.env"
         )
 
     return Clerk(bearer_auth=CLERK_SECRET_KEY)
@@ -28,9 +30,15 @@ def get_clerk_client():
 def get_current_user_id(request: Request) -> str | None:
     authorization = request.headers.get("authorization")
 
-    # No token means guest user.
+    # Requests without a token are guest requests.
     if not authorization:
         return None
+
+    if not authorization.lower().startswith("bearer "):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid authorization header",
+        )
 
     try:
         clerk_request = httpx.Request(

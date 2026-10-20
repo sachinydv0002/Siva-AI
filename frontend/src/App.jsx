@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { useAuth, SignIn, SignUp } from '@clerk/react'
+import { useAuth, useClerk, useUser, SignIn, SignUp } from '@clerk/react'
 import {
   MessageSquare,
   Sparkles,
@@ -19,6 +19,9 @@ import {
   Square,
   Code2,
   UserRound,
+  LogIn,
+  LogOut,
+  LockKeyhole,
   Settings,
   ChevronUp,
   ChevronDown,
@@ -27,6 +30,7 @@ import {
   Copy,
   Sun,
   Moon,
+  Monitor,
   Pencil,
   Pin,
   Trash2,
@@ -34,6 +38,7 @@ import {
   RotateCcw,
 } from 'lucide-react'
 import './App.css'
+import './AccountMenu.css'
 
 
 function TrishulMark({ size = 23 }) {
@@ -117,7 +122,7 @@ function getSavedSidebarState() {
 
 function loadSavedAppState() {
   try {
-    const raw = window.localStorage.getItem(APP_STATE_STORAGE_KEY)
+    const raw = window.sessionStorage.getItem(APP_STATE_STORAGE_KEY)
     if (!raw) return null
     const parsed = JSON.parse(raw)
     if (!parsed || !Array.isArray(parsed.chats)) return null
@@ -157,6 +162,8 @@ function loadSavedAppState() {
 
 function WorkspaceApp() {
   const { isLoaded, isSignedIn, getToken } = useAuth()
+  const { signOut, openUserProfile } = useClerk()
+  const { user } = useUser()
   const authenticatedHistoryRequest = useCallback(
     (path, options = {}) => historyRequest(path, options, isSignedIn ? getToken : null),
     [getToken, isSignedIn],
@@ -169,22 +176,30 @@ function WorkspaceApp() {
     initialSavedChat && (!Array.isArray(initialSavedChat.messages) || initialSavedChat.messages.length === 0)
   )
   const [chats, setChats] = useState(() => initialAppState?.chats ?? [createChat('chat')])
-  const [activeChatId, setActiveChatId] = useState(() => initialAppState?.activeChatId ?? null)
+  const [activeChatId, setActiveChatId] = useState(() => initialAppState?.activeChatId ?? initialAppState?.chats?.[0]?.id ?? null)
   const [message, setMessage] = useState('')
   const [editingMessage, setEditingMessage] = useState(null)
   const [isStreaming, setIsStreaming] = useState(false)
   const [isNavExpanded, setIsNavExpanded] = useState(getSavedSidebarState)
   const [theme, setTheme] = useState(() => {
     try {
-      return window.localStorage.getItem(THEME_STORAGE_KEY) === 'light' ? 'light' : 'dark'
+      const saved = window.localStorage.getItem(THEME_STORAGE_KEY)
+      return ['light', 'dark', 'system'].includes(saved) ? saved : 'system'
     } catch {
-      return 'dark'
+      return 'system'
     }
   })
+  const [systemPrefersDark, setSystemPrefersDark] = useState(() => {
+    try { return window.matchMedia('(prefers-color-scheme: dark)').matches } catch { return false }
+  })
+  const effectiveTheme = theme === 'system' ? (systemPrefersDark ? 'dark' : 'light') : theme
   const [searchQuery, setSearchQuery] = useState('')
   const [socialOpen, setSocialOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
   const [memoriesOpen, setMemoriesOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [displayNameDraft, setDisplayNameDraft] = useState('')
+  const [savingDisplayName, setSavingDisplayName] = useState(false)
   const [savedMemories, setSavedMemories] = useState([])
   const [memoriesLoading, setMemoriesLoading] = useState(false)
   const [toast, setToast] = useState('')
@@ -204,7 +219,12 @@ function WorkspaceApp() {
   const abortControllerRef = useRef(null)
   const requestInProgressRef = useRef(false)
   const shouldAutoScrollRef = useRef(true)
-  const activeChatIdRef = useRef(initialAppState?.activeChatId ?? null)
+  const activeChatIdRef = useRef(initialAppState?.activeChatId ?? initialAppState?.chats?.[0]?.id ?? null)
+  const chatsRef = useRef(initialAppState?.chats ?? [])
+
+  useEffect(() => {
+    chatsRef.current = chats
+  }, [chats])
   const toastTimerRef = useRef(null)
   const sidebarRef = useRef(null)
   const socialPopoverRef = useRef(null)
@@ -214,6 +234,14 @@ function WorkspaceApp() {
   const hasRestoredScrollRef = useRef(false)
 
   const activeChat = chats.find((chat) => chat.id === activeChatId) ?? chats[0]
+  const accountDisplayName = (() => {
+    const first = user?.firstName?.trim() || ''
+    const last = user?.lastName?.trim() || ''
+    const full = [first, last].filter(Boolean).join(' ')
+    const metadataName = user?.publicMetadata?.name || user?.unsafeMetadata?.name
+    const emailPrefix = user?.primaryEmailAddress?.emailAddress?.split('@')?.[0]?.replace(/[._-]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
+    return full || user?.fullName?.trim() || user?.username?.trim() || (typeof metadataName === 'string' ? metadataName.trim() : '') || emailPrefix || 'Siva AI User'
+  })()
   const messages = activeChat?.messages ?? []
 
   useEffect(() => {
@@ -263,17 +291,15 @@ function WorkspaceApp() {
     if (!isLoaded) return () => { cancelled = true }
 
     if (!isSignedIn) {
-      const freshChat = createChat('chat')
-      setChats([freshChat])
-      setActiveChatId(freshChat.id)
-      activeChatIdRef.current = freshChat.id
-      setActiveView('chat')
-      setSelectedMode('chat')
-      setMessage('')
-      try {
-        window.localStorage.removeItem(APP_STATE_STORAGE_KEY)
-      } catch {
-        // The guest session still works if browser storage is unavailable.
+      // Guest workspace is tab-scoped: preserve it across refreshes in this tab,
+      // but never write it to localStorage or the server.
+      if (!activeChatIdRef.current) {
+        const freshChat = createChat('chat')
+        setChats([freshChat])
+        setActiveChatId(freshChat.id)
+        activeChatIdRef.current = freshChat.id
+        setActiveView('chat')
+        setSelectedMode('chat')
       }
       return () => { cancelled = true }
     }
@@ -301,21 +327,19 @@ function WorkspaceApp() {
 
         if (cancelled) return
 
-        if (completeChats.length === 0) {
-          const freshWelcomeChat = createChat('chat')
-          setChats([freshWelcomeChat])
-          setActiveChatId(freshWelcomeChat.id)
-          activeChatIdRef.current = freshWelcomeChat.id
-          setActiveView('chat')
-          setSelectedMode('chat')
-          return
-        }
+        // Keep the tab's active conversation. A brand-new tab starts with a
+        // fresh local chat, even when the account already has saved conversations.
+        const currentActiveId = activeChatIdRef.current
+        const localChats = chatsRef.current
+        const serverIds = new Set(completeChats.map((chat) => chat.id))
+        const unsyncedChats = localChats.filter((chat) => !serverIds.has(chat.id))
+        const mergedChats = [...unsyncedChats, ...completeChats]
+        const preferredChat = mergedChats.find((chat) => chat.id === currentActiveId)
+          ?? unsyncedChats[0]
+          ?? completeChats[0]
+          ?? createChat('chat')
 
-        setChats(completeChats)
-        const preferredId = completeChats.some((chat) => chat.id === activeChatIdRef.current)
-          ? activeChatIdRef.current
-          : completeChats[0].id
-        const preferredChat = completeChats.find((chat) => chat.id === preferredId) ?? completeChats[0]
+        setChats(mergedChats.length ? mergedChats : [preferredChat])
         setActiveChatId(preferredChat.id)
         activeChatIdRef.current = preferredChat.id
         setActiveView(preferredChat.mode ?? 'chat')
@@ -330,14 +354,23 @@ function WorkspaceApp() {
   }, [isLoaded, isSignedIn, authenticatedHistoryRequest])
 
   useEffect(() => {
-    document.documentElement.dataset.theme = theme
-    document.body.dataset.theme = theme
+    const media = window.matchMedia('(prefers-color-scheme: dark)')
+    const updateSystemTheme = () => setSystemPrefersDark(media.matches)
+    updateSystemTheme()
+    media.addEventListener?.('change', updateSystemTheme)
+    return () => media.removeEventListener?.('change', updateSystemTheme)
+  }, [])
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = effectiveTheme
+    document.body.dataset.theme = effectiveTheme
+    document.documentElement.dataset.themePreference = theme
     try {
       window.localStorage.setItem(THEME_STORAGE_KEY, theme)
     } catch {
       // Theme still works for this session if storage is unavailable.
     }
-  }, [theme])
+  }, [theme, effectiveTheme])
 
   useEffect(() => {
     try {
@@ -423,12 +456,11 @@ function WorkspaceApp() {
 
   useEffect(() => {
     const saveWorkspace = () => {
-      if (!isLoaded || !isSignedIn) {
-        try { window.localStorage.removeItem(APP_STATE_STORAGE_KEY) } catch {}
-        return
-      }
+      if (!isLoaded) return
       try {
-        window.localStorage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify({
+        // sessionStorage is isolated per tab: refresh restores this tab, a new
+        // tab starts with a fresh welcome chat. Server history remains in MongoDB.
+        window.sessionStorage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify({
           chats,
           activeChatId,
           activeView,
@@ -562,6 +594,46 @@ function WorkspaceApp() {
     toastTimerRef.current = window.setTimeout(() => setToast(''), 1800)
   }
 
+  const handleSignOut = useCallback(async () => {
+    setAccountOpen(false)
+    try {
+      await signOut({ redirectUrl: '/' })
+    } catch (error) {
+      console.error('Unable to sign out:', error)
+      setToast('Could not sign out. Please try again.')
+    }
+  }, [signOut])
+
+  function openSettings() {
+    setDisplayNameDraft(accountDisplayName === 'Siva AI User' ? '' : accountDisplayName)
+    setAccountOpen(false)
+    setSettingsOpen(true)
+  }
+
+  async function saveDisplayName(event) {
+    event.preventDefault()
+    const cleanName = displayNameDraft.trim().replace(/\s+/g, ' ')
+    if (!cleanName) {
+      setToast('Please enter a display name')
+      return
+    }
+    if (!user?.update) {
+      setToast('Name editing is unavailable. Use Manage account instead.')
+      return
+    }
+    setSavingDisplayName(true)
+    try {
+      const parts = cleanName.split(' ')
+      await user.update({ firstName: parts[0], lastName: parts.slice(1).join('') ? parts.slice(1).join(' ') : '' })
+      setToast('Display name updated')
+    } catch (error) {
+      console.error('Could not update display name:', error)
+      setToast('Could not update name. Try Manage account.')
+    } finally {
+      setSavingDisplayName(false)
+    }
+  }
+
   function toggleNav() {
     setIsNavExpanded((previous) => !previous)
     setSocialOpen(false)
@@ -678,9 +750,7 @@ function WorkspaceApp() {
         body: JSON.stringify({
           message: userMessage,
           chat_id: chatId,
-          mode: activeChat?.id === chatId
-            ? (chats.find((chat) => chat.id === chatId)?.mode ?? selectedMode ?? 'chat')
-            : (selectedMode ?? 'chat'),
+          mode: chatsRef.current.find((chat) => chat.id === chatId)?.mode ?? 'chat',
         }),
         signal: controller.signal,
       })
@@ -1025,14 +1095,19 @@ function WorkspaceApp() {
               setSocialOpen(false)
             }}
             aria-expanded={accountOpen}
-            data-tooltip={accountOpen ? undefined : "Your account"}
+            aria-label={isSignedIn ? 'Open account menu' : 'Open sign in menu'}
+            data-tooltip={accountOpen ? undefined : (isSignedIn ? 'Your account' : 'Sign in')}
           >
-            <span className="account-avatar">S</span>
+            {isSignedIn && user?.imageUrl ? (
+              <img className="account-avatar account-avatar-image" src={user.imageUrl} alt="" />
+            ) : (
+              <span className="account-avatar">{isSignedIn ? (accountDisplayName?.charAt(0)?.toUpperCase() || 'S') : <UserRound size={17} />}</span>
+            )}
             {isNavExpanded && (
               <>
                 <span className="account-copy">
-                  <strong>Your account</strong>
-                  <small>Personal workspace</small>
+                  <strong>{isLoaded && isSignedIn ? accountDisplayName : 'Your account'}</strong>
+                  <small>{!isLoaded ? 'Checking account…' : isSignedIn ? (user?.primaryEmailAddress?.emailAddress || 'Signed in') : 'Guest · Not signed in'}</small>
                 </span>
                 {accountOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </>
@@ -1042,28 +1117,67 @@ function WorkspaceApp() {
           {accountOpen && (
             <div className="nav-popover account-popover" ref={accountPopoverRef}>
               <div className="account-popup-header">
-                <span className="account-avatar large">S</span>
-                <div>
-                  <strong>Your account</strong>
-                  <small>Siva AI workspace</small>
+                {isSignedIn && user?.imageUrl ? (
+                  <img className="account-avatar large account-avatar-image" src={user.imageUrl} alt="" />
+                ) : (
+                  <span className="account-avatar large">{isSignedIn ? (accountDisplayName?.charAt(0)?.toUpperCase() || 'S') : <UserRound size={20} />}</span>
+                )}
+                <div className="account-popup-identity">
+                  <strong>{!isLoaded ? 'Loading account…' : isSignedIn ? accountDisplayName : 'You’re using Siva AI'}</strong>
+                  <small>{isSignedIn ? (user?.primaryEmailAddress?.emailAddress || 'Signed in with Clerk') : 'Sign in to sync your chats'}</small>
                 </div>
               </div>
-              <button type="button" onClick={() => showComingSoon('Profile')}>
-                <UserRound size={16} /> Profile
-              </button>
-              <button type="button" onClick={openSavedMemories}>
-                <Brain size={16} /> Saved memory
-              </button>
-              <button type="button" onClick={() => showComingSoon('Settings')}>
-                <Settings size={16} /> Settings
-              </button>
+
+              {!isLoaded ? (
+                <div className="account-menu-status">Checking your session…</div>
+              ) : isSignedIn ? (
+                <>
+                  <button type="button" onClick={() => { setAccountOpen(false); openUserProfile() }}>
+                    <UserRound size={16} /> Manage account
+                  </button>
+                  <button type="button" onClick={openSavedMemories}>
+                    <Brain size={16} /> Saved memory
+                  </button>
+                  <button type="button" onClick={openSettings}>
+                    <Settings size={16} /> Settings
+                  </button>
+                  <button
+                    type="button"
+                    className="account-signout-option"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut size={16} /> Sign out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button type="button" className="account-feature-locked" disabled title="Sign in to use this feature">
+                    <UserRound size={16} /> Manage account <LockKeyhole size={14} />
+                  </button>
+                  <button type="button" className="account-feature-locked" disabled title="Sign in to use this feature">
+                    <Brain size={16} /> Saved memory <LockKeyhole size={14} />
+                  </button>
+                  <button type="button" className="account-feature-locked" disabled title="Sign in to use this feature">
+                    <Settings size={16} /> Settings <LockKeyhole size={14} />
+                  </button>
+                  <div className="account-guest-auth-actions">
+                    <a href="/sign-in" className="account-auth-option" onClick={() => setAccountOpen(false)}>
+                      <LogIn size={16} /> Sign in
+                    </a>
+                    <a href="/sign-up" className="account-auth-option secondary" onClick={() => setAccountOpen(false)}>
+                      <UserRound size={16} /> Create account
+                    </a>
+                  </div>
+                </>
+              )}
+
               <button
                 type="button"
                 className="theme-toggle-option"
-                onClick={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')}
+                onClick={() => setTheme((current) => current === 'system' ? 'light' : current === 'light' ? 'dark' : 'system')}
               >
-                {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-                {theme === 'dark' ? 'Light theme' : 'Dark theme'}
+                {theme === 'system' ? <Monitor size={16} /> : theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+                {theme === 'system' ? 'System theme' : theme === 'dark' ? 'Light theme' : 'Dark theme'}
                 <span className={`theme-switch ${theme}`} aria-hidden="true"><span /></span>
               </button>
             </div>
@@ -1391,6 +1505,37 @@ function WorkspaceApp() {
         </div>
       )}
 
+      {settingsOpen && (
+        <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setSettingsOpen(false) }}>
+          <div className="rename-dialog account-settings-dialog" role="dialog" aria-modal="true" aria-labelledby="account-settings-title">
+            <div className="rename-dialog-heading">
+              <div className="rename-dialog-icon"><Settings size={18} /></div>
+              <div><h2 id="account-settings-title">Account settings</h2><p>Manage your Siva AI profile and appearance.</p></div>
+              <button type="button" className="rename-close" onClick={() => setSettingsOpen(false)} aria-label="Close settings"><X size={17} /></button>
+            </div>
+            {isSignedIn ? (
+              <form onSubmit={saveDisplayName} className="account-settings-form">
+                <label htmlFor="account-display-name">Display name</label>
+                <input id="account-display-name" value={displayNameDraft} onChange={(event) => setDisplayNameDraft(event.target.value)} maxLength={80} placeholder="Enter your name" />
+                <p className="account-settings-help">This name appears in the account section. You can edit other profile details using Manage account.</p>
+                <div className="rename-dialog-actions"><button type="button" className="rename-cancel" onClick={() => { setSettingsOpen(false); openUserProfile() }}>Manage account</button><button type="submit" className="rename-save" disabled={savingDisplayName || !displayNameDraft.trim()}>{savingDisplayName ? 'Saving…' : 'Save name'}</button></div>
+              </form>
+            ) : (
+              <p>Sign in to manage your profile. You can still change the appearance below.</p>
+            )}
+            <div className="account-settings-row account-appearance-row">
+              <div><strong>Appearance</strong><small>Choose Light, Dark, or follow your device setting.</small></div>
+              <div className="theme-preference-options" role="group" aria-label="Appearance preference">
+                <button type="button" className={theme === 'light' ? 'selected' : ''} aria-pressed={theme === 'light'} onClick={() => setTheme('light')}><Sun size={15} /> Light</button>
+                <button type="button" className={theme === 'dark' ? 'selected' : ''} aria-pressed={theme === 'dark'} onClick={() => setTheme('dark')}><Moon size={15} /> Dark</button>
+                <button type="button" className={theme === 'system' ? 'selected' : ''} aria-pressed={theme === 'system'} onClick={() => setTheme('system')}><Monitor size={15} /> System</button>
+              </div>
+            </div>
+            <div className="rename-dialog-actions"><button type="button" className="rename-cancel" onClick={() => setSettingsOpen(false)}>Done</button></div>
+          </div>
+        </div>
+      )}
+
       {memoriesOpen && (
         <div
           className="modal-backdrop"
@@ -1483,15 +1628,61 @@ function WorkspaceApp() {
 function App() {
   const path = window.location.pathname
 
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-color-scheme: dark)')
+    const applyAuthPageTheme = () => {
+      let preference = 'system'
+      try { preference = window.localStorage.getItem(THEME_STORAGE_KEY) || 'system' } catch { /* use system */ }
+      const resolved = preference === 'system' ? (media.matches ? 'dark' : 'light') : preference
+      document.documentElement.dataset.theme = resolved
+      document.body.dataset.theme = resolved
+      document.documentElement.dataset.themePreference = preference
+    }
+    applyAuthPageTheme()
+    media.addEventListener?.('change', applyAuthPageTheme)
+    window.addEventListener('storage', applyAuthPageTheme)
+    return () => {
+      media.removeEventListener?.('change', applyAuthPageTheme)
+      window.removeEventListener('storage', applyAuthPageTheme)
+    }
+  }, [])
+
+
   if (path.startsWith('/sign-in')) {
     return (
       <div className="siva-auth-page">
+        <div className="siva-auth-stack">
         <SignIn
           routing="hash"
+          oauthFlow="redirect"
           signUpUrl="/sign-up"
           fallbackRedirectUrl="/"
           signUpFallbackRedirectUrl="/"
+          appearance={{
+            variables: {
+              colorPrimary: '#2563eb',
+              colorBackground: 'var(--siva-auth-card, #ffffff)',
+              colorText: 'var(--siva-auth-text, #172033)',
+              colorTextSecondary: 'var(--siva-auth-muted, #64748b)',
+              colorInputBackground: 'var(--siva-auth-card, #ffffff)',
+              colorInputText: 'var(--siva-auth-text, #172033)',
+              borderRadius: '12px',
+              fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+            },
+            elements: {
+              card: 'siva-clerk-card',
+              headerTitle: 'siva-clerk-title',
+              formButtonPrimary: 'siva-clerk-primary-button',
+              footerAction: 'siva-clerk-footer-action',
+              footerActionLink: 'siva-clerk-footer-action-link',
+              footerPages: 'siva-clerk-footer-pages',
+            },
+          }}
         />
+          <p className="siva-auth-switch">
+            Don’t have an account? <a href="/sign-up">Sign up</a>
+          </p>
+        </div>
       </div>
     )
   }
@@ -1499,12 +1690,38 @@ function App() {
   if (path.startsWith('/sign-up')) {
     return (
       <div className="siva-auth-page">
+        <div className="siva-auth-stack">
         <SignUp
           routing="hash"
+          oauthFlow="redirect"
           signInUrl="/sign-in"
           fallbackRedirectUrl="/"
           signInFallbackRedirectUrl="/"
+          appearance={{
+            variables: {
+              colorPrimary: '#2563eb',
+              colorBackground: 'var(--siva-auth-card, #ffffff)',
+              colorText: 'var(--siva-auth-text, #172033)',
+              colorTextSecondary: 'var(--siva-auth-muted, #64748b)',
+              colorInputBackground: 'var(--siva-auth-card, #ffffff)',
+              colorInputText: 'var(--siva-auth-text, #172033)',
+              borderRadius: '12px',
+              fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+            },
+            elements: {
+              card: 'siva-clerk-card',
+              headerTitle: 'siva-clerk-title',
+              formButtonPrimary: 'siva-clerk-primary-button',
+              footerAction: 'siva-clerk-footer-action',
+              footerActionLink: 'siva-clerk-footer-action-link',
+              footerPages: 'siva-clerk-footer-pages',
+            },
+          }}
         />
+          <p className="siva-auth-switch">
+            Already have an account? <a href="/sign-in">Sign in</a>
+          </p>
+        </div>
       </div>
     )
   }

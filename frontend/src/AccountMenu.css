@@ -1,0 +1,660 @@
+/* Siva AI account menu polish */
+.account-trigger {
+  min-width: 0;
+  width: 100%;
+  text-align: left;
+}
+
+.account-avatar-image {
+  display: inline-flex;
+  flex: 0 0 auto;
+  object-fit: cover;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.account-avatar.large.account-avatar-image {
+  width: 42px;
+  height: 42px;
+}
+
+.account-popup-identity {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  gap: 3px;
+}
+
+.account-popup-identity strong,
+.account-popup-identity small,
+.account-copy strong,
+.account-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-popup-identity small,
+.account-menu-status {
+  color: var(--muted, #9ca3af);
+  font-size: 12px;
+}
+
+.account-menu-status {
+  padding: 10px 12px;
+}
+
+.account-popover .account-auth-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 9px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.account-popover .account-auth-option:hover {
+  background: var(--hover, rgba(148, 163, 184, 0.12));
+}
+
+.account-popover .account-auth-option.secondary {
+  color: var(--muted, #9ca3af);
+}
+
+.account-popover .account-signout-option {
+  color: #f87171;
+}
+
+.account-popover .account-signout-option:hover {
+  background: rgba(248, 113, 113, 0.1);
+}
+
+/* Functional account settings modal */
+.account-settings-dialog {
+  width: min(520px, calc(100vw - 32px));
+}
+.account-settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 18px;
+}
+.account-settings-form label {
+  font-size: 13px;
+  font-weight: 600;
+}
+.account-settings-form input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid var(--border, rgba(148, 163, 184, .24));
+  border-radius: 10px;
+  color: inherit;
+  background: var(--surface, rgba(148, 163, 184, .07));
+  font: inherit;
+  outline: none;
+}
+.account-settings-form input:focus {
+  border-color: var(--accent, #818cf8);
+}
+.account-settings-help,
+.account-settings-row small {
+  color: var(--muted, #9ca3af);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+.account-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  margin-top: 12px;
+  border-top: 1px solid var(--border, rgba(148, 163, 184, .16));
+}
+.account-settings-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.account-settings-row strong { font-size: 13px; }
+.account-settings-theme {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 11px;
+  border: 1px solid var(--border, rgba(148, 163, 184, .24));
+  border-radius: 9px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.account-settings-theme:hover { background: var(--hover, rgba(148, 163, 184, .12)); }
+
+/* Saved Memory: compact, readable cards instead of loose text/buttons */
+.saved-memory-dialog {
+  width: min(560px, calc(100vw - 28px));
+  max-height: min(78vh, 760px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+.saved-memory-dialog .rename-dialog-heading {
+  flex: 0 0 auto;
+}
+.saved-memory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 6px 3px 10px 0;
+  margin: 8px 0;
+}
+.saved-memory-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--border, rgba(148, 163, 184, .22));
+  border-radius: 12px;
+  background: var(--surface, rgba(148, 163, 184, .06));
+}
+.saved-memory-item > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.saved-memory-item p {
+  margin: 0 0 9px;
+  color: var(--text, inherit);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.saved-memory-item small {
+  display: inline-flex;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--hover, rgba(148, 163, 184, .12));
+  color: var(--muted, #64748b);
+  font-size: 11px;
+  text-transform: capitalize;
+}
+.saved-memory-item .delete-confirm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  padding: 8px 10px;
+  border: 1px solid rgba(239, 68, 68, .28);
+  border-radius: 9px;
+  background: rgba(239, 68, 68, .09);
+  color: #dc2626;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+.saved-memory-item .delete-confirm:hover {
+  background: rgba(239, 68, 68, .16);
+  border-color: rgba(239, 68, 68, .48);
+}
+.saved-memory-dialog > .rename-dialog-actions {
+  flex: 0 0 auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--border, rgba(148, 163, 184, .16));
+}
+
+/* Sign-in/sign-up links stay legible in both themes */
+.history-auth-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.history-auth-prompt p {
+  margin: 0 0 5px;
+  line-height: 1.5;
+}
+.history-auth-prompt .history-auth-button,
+.history-auth-prompt a.history-auth-button,
+.account-popover a.account-auth-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 13px;
+  border: 1px solid var(--accent, #2563eb);
+  border-radius: 10px;
+  background: var(--accent, #2563eb);
+  color: #fff !important;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none !important;
+  cursor: pointer;
+  opacity: 1;
+}
+.history-auth-prompt .history-auth-button:hover,
+.account-popover a.account-auth-option:hover {
+  filter: brightness(.94);
+  background: var(--accent, #2563eb);
+  color: #fff !important;
+}
+.history-auth-prompt .history-auth-button.secondary,
+.account-popover a.account-auth-option.secondary {
+  background: transparent;
+  color: var(--accent, #2563eb) !important;
+  border-color: var(--accent, #2563eb);
+}
+.history-auth-prompt .history-auth-button.secondary:hover,
+.account-popover a.account-auth-option.secondary:hover {
+  background: rgba(37, 99, 235, .09);
+  color: var(--accent, #2563eb) !important;
+}
+
+/* Light theme contrast fixes */
+:root[data-theme="light"] .saved-memory-dialog,
+:root[data-theme="light"] .account-settings-dialog {
+  color: #172033;
+}
+:root[data-theme="light"] .saved-memory-item {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+:root[data-theme="light"] .saved-memory-item p {
+  color: #172033;
+}
+:root[data-theme="light"] .saved-memory-item small {
+  background: #eaf0f8;
+  color: #475569;
+}
+:root[data-theme="light"] .account-popover a.account-auth-option.secondary {
+  color: #1d4ed8 !important;
+}
+
+/* Siva-branded Clerk sign-in/sign-up page */
+.siva-auth-page {
+  --siva-auth-primary: #2563eb;
+  --siva-auth-primary-hover: #1d4ed8;
+  --siva-auth-bg: #f4f7ff;
+  --siva-auth-card: #ffffff;
+  --siva-auth-text: #172033;
+  --siva-auth-muted: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 28px 16px;
+  color: var(--siva-auth-text);
+  background: radial-gradient(circle at 15% 10%, rgba(96, 165, 250, .2), transparent 35%),
+              radial-gradient(circle at 85% 90%, rgba(129, 140, 248, .18), transparent 32%),
+              var(--siva-auth-bg);
+}
+:root[data-theme="dark"] .siva-auth-page {
+  --siva-auth-bg: #0b1120;
+  --siva-auth-card: #111b2e;
+  --siva-auth-text: #e5edff;
+  --siva-auth-muted: #9aa9c2;
+  background: radial-gradient(circle at 15% 10%, rgba(37, 99, 235, .24), transparent 36%),
+              radial-gradient(circle at 85% 90%, rgba(99, 102, 241, .2), transparent 32%),
+              var(--siva-auth-bg);
+}
+.siva-auth-page .cl-rootBox,
+.siva-auth-page .cl-card {
+  color: var(--siva-auth-text);
+}
+.siva-auth-page .cl-card {
+  border: 1px solid rgba(148, 163, 184, .22);
+  border-radius: 20px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, .16);
+}
+@media (max-width: 520px) {
+  .saved-memory-item { gap: 9px; padding: 11px; }
+  .saved-memory-item .delete-confirm { padding: 7px 8px; }
+  .siva-auth-page { padding: 16px 10px; }
+}
+
+/* Three-way appearance selector: Light / Dark / System */
+.account-appearance-row { align-items: flex-start; flex-direction: column; gap: 12px; }
+.theme-preference-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; width: 100%; }
+.theme-preference-options button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 38px; padding: 8px 10px; border: 1px solid var(--border, #dbe3ef);
+  border-radius: 10px; background: var(--surface, #fff); color: var(--text, #334155);
+  font: inherit; font-size: 13px; cursor: pointer; transition: background .18s, border-color .18s, color .18s;
+}
+.theme-preference-options button:hover { border-color: #6366f1; }
+.theme-preference-options button.selected { background: rgba(79, 70, 229, .12); color: #4f46e5; border-color: #6366f1; font-weight: 650; }
+:root[data-theme="dark"] .theme-preference-options button { background: #111b2e; color: #dbeafe; border-color: #334155; }
+:root[data-theme="dark"] .theme-preference-options button.selected { background: rgba(99, 102, 241, .2); color: #c7d2fe; border-color: #818cf8; }
+
+/* Match Clerk auth screens to the Siva AI indigo/blue visual identity. */
+.siva-auth-page {
+  --siva-auth-primary: #4f46e5;
+  --siva-auth-primary-hover: #4338ca;
+  background-color: #f5f7ff;
+  background-image: radial-gradient(ellipse at 12% 15%, rgba(59, 130, 246, .22), transparent 38%),
+                    radial-gradient(ellipse at 88% 85%, rgba(124, 58, 237, .16), transparent 35%),
+                    linear-gradient(135deg, #f8faff 0%, #eef2ff 50%, #f5f3ff 100%);
+}
+.siva-auth-page .cl-card { backdrop-filter: blur(16px); }
+.siva-auth-page .cl-formButtonPrimary { background: linear-gradient(135deg, #4f46e5, #2563eb) !important; }
+.siva-auth-page .cl-formButtonPrimary:hover { background: linear-gradient(135deg, #4338ca, #1d4ed8) !important; }
+:root[data-theme="dark"] .siva-auth-page {
+  --siva-auth-bg: #080d1b;
+  --siva-auth-card: #111827;
+  --siva-auth-text: #eef2ff;
+  --siva-auth-muted: #a5b4cf;
+  background-image: radial-gradient(ellipse at 12% 15%, rgba(59, 130, 246, .25), transparent 38%),
+                    radial-gradient(ellipse at 88% 85%, rgba(124, 58, 237, .22), transparent 35%),
+                    linear-gradient(135deg, #080d1b 0%, #10152c 55%, #17132e 100%);
+}
+
+
+/* Dark-mode contrast fixes for Clerk auth UI. Keep all text readable. */
+:root[data-theme="dark"] .siva-auth-page .cl-card,
+:root[data-theme="dark"] .siva-auth-page .cl-main,
+:root[data-theme="dark"] .siva-auth-page .cl-internal-b3fm6y {
+  background: #111827 !important;
+  color: #f1f5ff !important;
+}
+:root[data-theme="dark"] .siva-auth-page .cl-headerTitle,
+:root[data-theme="dark"] .siva-auth-page .cl-headerSubtitle,
+:root[data-theme="dark"] .siva-auth-page .cl-formFieldLabel,
+:root[data-theme="dark"] .siva-auth-page .cl-dividerText,
+:root[data-theme="dark"] .siva-auth-page .cl-footerActionText,
+:root[data-theme="dark"] .siva-auth-page .cl-formFieldHintText,
+:root[data-theme="dark"] .siva-auth-page .cl-identityPreviewText {
+  color: #e5edff !important;
+}
+:root[data-theme="dark"] .siva-auth-page .cl-formFieldInput,
+:root[data-theme="dark"] .siva-auth-page input,
+:root[data-theme="dark"] .siva-auth-page textarea,
+:root[data-theme="dark"] .siva-auth-page select {
+  color: #f8fafc !important;
+  background: #1e293b !important;
+  border-color: #475569 !important;
+  caret-color: #a5b4fc !important;
+}
+:root[data-theme="dark"] .siva-auth-page .cl-formFieldInput::placeholder,
+:root[data-theme="dark"] .siva-auth-page input::placeholder { color: #94a3b8 !important; }
+:root[data-theme="dark"] .siva-auth-page .cl-socialButtonsBlockButton,
+:root[data-theme="dark"] .siva-auth-page .cl-alternativeMethodsBlockButton {
+  background: #1e293b !important; color: #f1f5f9 !important; border-color: #475569 !important;
+}
+:root[data-theme="dark"] .siva-auth-page .cl-socialButtonsBlockButtonText,
+:root[data-theme="dark"] .siva-auth-page .cl-alternativeMethodsBlockButtonText { color: #f1f5f9 !important; }
+:root[data-theme="dark"] .siva-auth-page .cl-footerActionLink,
+:root[data-theme="dark"] .siva-auth-page .cl-formFieldAction { color: #a5b4fc !important; }
+/* Keep Clerk's sign-in/sign-up switch visible; hide only Clerk's branding footer. */
+.siva-auth-page .cl-footerPages,
+.siva-auth-page .siva-clerk-footer-pages { display: none !important; }
+.siva-auth-page .siva-clerk-footer-action,
+.siva-auth-page .cl-footerAction { display: flex !important; visibility: visible !important; opacity: 1 !important; }
+.siva-auth-page .siva-clerk-footer-action-link,
+.siva-auth-page .cl-footerActionLink { color: #2563eb !important; font-weight: 650 !important; }
+.siva-auth-page .cl-card { color: var(--siva-auth-text) !important; }
+
+/* Dark auth pages: force readable text even when Clerk's internal defaults differ. */
+:root[data-theme="dark"] .siva-auth-page,
+:root[data-theme="dark"] .siva-auth-page * { color-scheme: dark; }
+:root[data-theme="dark"] .siva-auth-page .cl-headerTitle,
+:root[data-theme="dark"] .siva-auth-page .cl-headerSubtitle,
+:root[data-theme="dark"] .siva-auth-page .cl-formFieldLabel,
+:root[data-theme="dark"] .siva-auth-page .cl-formFieldHintText,
+:root[data-theme="dark"] .siva-auth-page .cl-dividerText,
+:root[data-theme="dark"] .siva-auth-page .cl-footerActionText,
+:root[data-theme="dark"] .siva-auth-page .cl-identityPreviewText,
+:root[data-theme="dark"] .siva-auth-page .cl-formResendCodeLink { color: #eaf0ff !important; }
+:root[data-theme="dark"] .siva-auth-page .cl-formFieldInput,
+:root[data-theme="dark"] .siva-auth-page input,
+:root[data-theme="dark"] .siva-auth-page textarea,
+:root[data-theme="dark"] .siva-auth-page select { color: #f8fafc !important; background-color: #1e293b !important; }
+
+/* Manage Account opens in a Clerk portal outside .siva-auth-page. Hide its branding only. */
+.cl-userProfile-root .cl-footerPages,
+.cl-userProfile-root .cl-footerPagesLink,
+.cl-userProfile-root .cl-footerPagesText,
+.cl-userProfile-root [data-localization-key*="development"],
+.cl-userProfile-root [class*="developmentMode"],
+.cl-userProfile-root [class*="development-mode"] { display: none !important; }
+.cl-userProfile-root .cl-footer { border-top: 0 !important; }
+
+
+
+/* Reliable Siva AI auth footer: replace Clerk footer with our own page-specific switch. */
+.siva-auth-page .siva-auth-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 440px;
+}
+.siva-auth-page .siva-auth-stack .cl-rootBox { width: 100%; }
+.siva-auth-page .cl-footer,
+.siva-auth-page .cl-footerPages,
+.siva-auth-page .cl-footerInfo,
+.siva-auth-page [class*="developmentMode"],
+.siva-auth-page [data-localization-key*="development"] {
+  display: none !important;
+}
+.siva-auth-page .siva-auth-switch {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 18px 12px;
+  text-align: center;
+  color: var(--siva-auth-muted, #64748b) !important;
+  font-size: 14px;
+  line-height: 1.5;
+  background: var(--siva-auth-card, #fff);
+  border: 1px solid rgba(148, 163, 184, .24);
+  border-top: 0;
+  border-radius: 0 0 18px 18px;
+}
+.siva-auth-page .siva-auth-switch a {
+  color: #2563eb !important;
+  font-weight: 700;
+  text-decoration: none;
+}
+.siva-auth-page .siva-auth-switch a:hover { text-decoration: underline; }
+:root[data-theme="dark"] .siva-auth-page .siva-auth-switch {
+  color: #cbd5e1 !important;
+  background: #111827;
+  border-color: rgba(148, 163, 184, .22);
+}
+:root[data-theme="dark"] .siva-auth-page .siva-auth-switch a { color: #a5b4fc !important; }
+
+/* Auth pages: preserve Clerk's native Google/OAuth buttons and keep the page switch
+   in its own separate row below the card (not joined to the Clerk card). */
+.siva-auth-page {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 12px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.siva-auth-page .siva-auth-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  width: min(430px, calc(100vw - 24px));
+  max-width: 430px;
+  min-width: 0;
+  margin: auto;
+  box-sizing: border-box;
+}
+.siva-auth-page .siva-auth-stack > .cl-rootBox,
+.siva-auth-page .siva-auth-stack .cl-cardBox,
+.siva-auth-page .siva-auth-stack .cl-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+.siva-auth-page .siva-auth-stack .cl-rootBox { margin: 0 !important; }
+.siva-auth-page .siva-auth-stack .cl-card {
+  margin: 0 !important;
+  border-radius: 22px !important;
+}
+/* Keep Clerk's own provider buttons visible, clickable, and in normal layout. */
+.siva-auth-page .cl-socialButtons,
+.siva-auth-page .cl-socialButtonsBlockButton,
+.siva-auth-page .cl-socialButtonsIconButton,
+.siva-auth-page .cl-alternativeMethodsBlockButton {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+/* Hide Clerk's built-in switch because Siva AI has its own independent row. */
+.siva-auth-page .cl-footerAction { display: none !important; }
+.siva-auth-page .cl-footerPages { display: none !important; }
+.siva-auth-page .siva-auth-switch {
+  display: block !important;
+  position: static !important;
+  flex: 0 0 auto;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 15px 14px !important;
+  box-sizing: border-box !important;
+  border: 1px solid rgba(148, 163, 184, .30) !important;
+  border-radius: 16px !important;
+  background: var(--siva-auth-card, #fff) !important;
+  color: var(--siva-auth-muted, #64748b) !important;
+  text-align: center !important;
+  font-size: 14px;
+  line-height: 1.5;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, .04);
+}
+.siva-auth-page .siva-auth-switch a {
+  color: #2563eb !important;
+  font-weight: 700 !important;
+  text-decoration: none !important;
+}
+.siva-auth-page .siva-auth-switch a:hover { text-decoration: underline !important; }
+:root[data-theme="dark"] .siva-auth-page .siva-auth-switch {
+  background: #111827 !important;
+  color: #cbd5e1 !important;
+  border-color: rgba(148, 163, 184, .28) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .16);
+}
+:root[data-theme="dark"] .siva-auth-page .siva-auth-switch a { color: #a5b4fc !important; }
+@media (max-width: 480px) {
+  .siva-auth-page { padding: 14px 10px; align-items: center; }
+  .siva-auth-page .siva-auth-stack { width: calc(100vw - 20px); gap: 10px; }
+}
+@media (max-height: 650px) {
+  .siva-auth-page { align-items: flex-start; }
+  .siva-auth-page .siva-auth-stack { margin-top: 8px; margin-bottom: 8px; }
+}
+
+/* Strong, consistent hover/focus visibility for account-menu auth actions. */
+.account-popover a.account-auth-option,
+.account-popover .account-auth-option {
+  transition: background-color .16s ease, color .16s ease, border-color .16s ease, box-shadow .16s ease;
+  outline-offset: 2px;
+}
+.account-popover a.account-auth-option:hover,
+.account-popover a.account-auth-option:focus-visible {
+  background: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+  color: #fff !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, .2);
+  filter: none;
+}
+.account-popover a.account-auth-option.secondary {
+  background: transparent;
+  color: #2563eb !important;
+}
+.account-popover a.account-auth-option.secondary:hover,
+.account-popover a.account-auth-option.secondary:focus-visible {
+  background: #eff6ff !important;
+  border-color: #2563eb !important;
+  color: #1d4ed8 !important;
+}
+.account-guest-auth-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border, rgba(148, 163, 184, .2));
+}
+.account-popover .account-feature-locked {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text, #334155);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  opacity: .72;
+  cursor: not-allowed;
+}
+.account-popover .account-feature-locked svg:last-child {
+  margin-left: auto;
+  opacity: .75;
+}
+:root[data-theme="dark"] .account-popover .account-feature-locked { color: #dbeafe; }
+
+/* Saved-memory delete button: visible in light and dark themes, including hover. */
+.saved-memory-item .delete-confirm {
+  color: #b91c1c;
+  background: #fff1f2;
+  border: 1px solid #fda4af;
+  box-shadow: 0 1px 2px rgba(127, 29, 29, .08);
+}
+.saved-memory-item .delete-confirm:hover,
+.saved-memory-item .delete-confirm:focus-visible {
+  color: #fff;
+  background: #b91c1c;
+  border-color: #991b1b;
+  outline: 2px solid rgba(239, 68, 68, .25);
+  outline-offset: 2px;
+}
+:root[data-theme="dark"] .saved-memory-item .delete-confirm {
+  color: #fecaca;
+  background: rgba(127, 29, 29, .35);
+  border-color: #b91c1c;
+}
+:root[data-theme="dark"] .saved-memory-item .delete-confirm:hover,
+:root[data-theme="dark"] .saved-memory-item .delete-confirm:focus-visible {
+  color: #fff;
+  background: #b91c1c;
+  border-color: #f87171;
+}

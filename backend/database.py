@@ -1,10 +1,12 @@
 
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 
-load_dotenv()
+BACKEND_DIR = Path(__file__).resolve().parent
+load_dotenv(BACKEND_DIR / ".env")
 
 MONGO_URI = os.getenv("MONGO_URI")
 
@@ -17,9 +19,6 @@ client = AsyncIOMotorClient(MONGO_URI)
 
 db = client["siva_ai"]
 
-# Chat history
 chats_collection = db["chats"]
 messages_collection = db["messages"]
-
-# Long-term chat memory
 memories_collection = db["memories"]
