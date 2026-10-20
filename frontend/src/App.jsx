@@ -342,18 +342,19 @@ function WorkspaceApp() {
 
         if (cancelled) return
 
-        // Only server chats owned by this verified Clerk user are shown.
-        // Do not merge guest chats or another account's session workspace.
-        const currentActiveId = activeChatIdRef.current
-        const preferredChat = completeChats.find((chat) => chat.id === currentActiveId)
-          ?? completeChats[0]
-          ?? createChat('chat')
-
-        setChats(completeChats.length ? completeChats : [preferredChat])
-        setActiveChatId(preferredChat.id)
-        activeChatIdRef.current = preferredChat.id
-        setActiveView(preferredChat.mode ?? 'chat')
-        setSelectedMode(preferredChat.mode ?? 'chat')
+        // Keep the workspace on a fresh welcome chat after the app opens or
+        // authentication completes. Previous conversations remain available
+        // in Recent Chats, but are never opened automatically.
+        const welcomeChat = createChat('chat')
+        setChats([welcomeChat, ...completeChats])
+        setActiveChatId(welcomeChat.id)
+        activeChatIdRef.current = welcomeChat.id
+        setMessage('')
+        setEditingMessage(null)
+        setActiveView('chat')
+        setSelectedMode('chat')
+        scrollTopRef.current = 0
+        hasRestoredScrollRef.current = true
       } catch (error) {
         console.error('Could not load MongoDB chat history:', error)
       }
@@ -1235,7 +1236,7 @@ function WorkspaceApp() {
                 </h1>
                 <p>
                   {activeView === 'beu'
-                    ? 'Bihar Engineering University ke syllabus, subjects, PYQs aur exam preparation ke liye dedicated study space.'
+                    ? 'A dedicated study space for Bihar Engineering University syllabi, subjects, previous-year questions, and exam preparation.'
                     : activeView === 'interview'
                       ? 'Prepare for technical and HR interviews with structured practice, clear explanations, and actionable feedback.'
                       : 'Your ideas, questions, and code — let’s work on them together.'}
@@ -1243,26 +1244,26 @@ function WorkspaceApp() {
                 <div className="prompt-cards">
                   {activeView === 'beu' ? (
                     <>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Main Bihar Engineering University (BEU) ke baare mein detail mein jaana chahta/chahti hoon. BEU ka overview, academic system, semester pattern, examination process, grading aur students ke liye useful official resources simple Hinglish mein samjhao. Jahan current official information zaroori ho, uncertainty clear batana aur mujhse course/branch poochhna.') }>
-                        <GraduationCap size={18} /><span><strong>BEU ke baare mein jaano</strong><small>University, semester aur exam system</small></span>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Explain Bihar Engineering University (BEU), including its overview, academic system, semester structure, examination process, grading, and useful official student resources. Clearly flag any information that needs current verification, and ask me for my course and branch.') }>
+                        <GraduationCap size={18} /><span><strong>Learn about BEU</strong><small>University, semesters, and exams</small></span>
                       </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Mujhe BEU ka syllabus samajhne aur organize karne mein help karo. Pehle meri course, branch, semester aur subject poochho. Phir syllabus ko unit-wise list karo, learning outcomes aur priority ke saath. Official syllabus document na ho to usse verified batakar present mat karna.') }>
-                        <MessageSquare size={18} /><span><strong>Syllabus & unit-wise topics</strong><small>Branch, semester aur subject ke hisaab se</small></span>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me understand and organize my BEU syllabus. First ask for my course, branch, semester, and subject. Then list the syllabus unit by unit with learning outcomes and priorities. Do not present a syllabus as verified unless an official document is available.') }>
+                        <MessageSquare size={18} /><span><strong>Syllabus and unit-wise topics</strong><small>Based on branch, semester, and subject</small></span>
                       </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Mujhe BEU exam ki preparation karni hai. Pehle branch, semester, subjects aur exam date poochho. Phir daily timetable, unit-wise targets, revision slots aur mock-test plan banao; plan realistic rakhna.') }>
-                        <Pencil size={18} /><span><strong>Exam preparation plan</strong><small>Timetable, revision aur priority topics</small></span>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare for my BEU exams. First ask for my branch, semester, subjects, and exam date. Then create a realistic daily timetable with unit-wise targets, revision sessions, and mock tests.') }>
+                        <Pencil size={18} /><span><strong>Exam preparation plan</strong><small>Timetable, revision, and priority topics</small></span>
                       </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Mujhe BEU ke Previous Year Questions (PYQs) ki preparation karwao. Pehle branch, semester, subject aur available year/question paper poochho. PYQs ko topic-wise organize karo, repeated themes identify karo, aur agar actual papers available nahi hain to generated questions ko clearly practice questions kehna, real PYQs nahi.') }>
-                        <Bot size={18} /><span><strong>PYQ preparation</strong><small>Previous papers aur topic-wise practice</small></span>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare using BEU previous-year questions (PYQs). First ask for my branch, semester, subject, and available exam years or papers. Organize questions by topic and identify recurring themes. If actual papers are unavailable, clearly label generated questions as practice questions, not real PYQs.') }>
+                        <Bot size={18} /><span><strong>Previous-year question practice</strong><small>Past papers and topic-wise practice</small></span>
                       </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('BEU exam ke liye marks-oriented answer writing practice karwao. Subject, unit, marks (2/5/10/15) aur question poochho; phir answer ko definition, headings, diagram suggestion, examples aur conclusion ke format mein likho.') }>
-                        <Pencil size={18} /><span><strong>Answer writing practice</strong><small>2, 5, 10 ya 15 marks ke answers</small></span>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me practise writing marks-oriented answers for BEU exams. Ask for the subject, unit, marks (2, 5, 10, or 15), and question. Then structure the answer with a definition, headings, suggested diagrams, examples, and a conclusion.') }>
+                        <Pencil size={18} /><span><strong>Answer-writing practice</strong><small>Answers for 2, 5, 10, or 15 marks</small></span>
                       </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Mujhe BEU ke liye subject-wise important concepts revise karwao. Pehle branch, semester aur subject poochho, phir unit-wise quick notes, key formulas/definitions aur short recap do. Kisi topic ke exam mein aane ki guarantee mat dena.') }>
-                        <Sparkles size={18} /><span><strong>Quick notes & revision</strong><small>Definitions, formulas aur short notes</small></span>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me revise key concepts for BEU, subject by subject. First ask for my branch, semester, and subject, then provide unit-wise quick notes, key formulas and definitions, and a short recap. Do not guarantee that any topic will appear on an exam.') }>
+                        <Sparkles size={18} /><span><strong>Quick notes and revision</strong><small>Definitions, formulas, and concise notes</small></span>
                       </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Mera BEU subject-wise test lo. Pehle branch, semester, subject aur unit poochho. Phir ek-ek karke MCQ, short-answer aur long-answer questions poochho; mere jawab ke baad score, explanation aur weak topics batao.') }>
-                        <Code2 size={18} /><span><strong>Practice test</strong><small>Quiz, score aur weak-topic analysis</small></span>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Test me on a BEU subject. First ask for my branch, semester, subject, and unit. Then ask multiple-choice, short-answer, and long-answer questions one at a time. After each response, explain the answer and track my score and weak areas.') }>
+                        <Code2 size={18} /><span><strong>Practice test</strong><small>Quiz, score, and weak-area analysis</small></span>
                       </button>
                     </>
                   ) : activeView === 'interview' ? (
@@ -1291,25 +1292,25 @@ function WorkspaceApp() {
                     </>
                   ) : (
                     <>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Aaj ki date aur aaj ke din ki important historical events batao.')}>
-                        <Sparkles size={18} /><span><strong>Today in focus</strong><small>Aaj ke din ke baare mein jaano</small></span>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage("Tell me today's date and important historical events associated with this day.")}> 
+                        <Sparkles size={18} /><span><strong>Today in focus</strong><small>Learn about this day</small></span>
                       </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me debug my code. Pehle mujhse code aur error message maango, phir step-by-step debug karo.')}>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me debug my code. First ask me to share the code and error message, then troubleshoot it step by step.')}>
                         <Code2 size={18} /><span><strong>Debug code</strong><small>Find and fix an issue</small></span>
                       </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Mujhe React ek beginner ki tarah step-by-step sikhao, simple examples ke saath.')}>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Teach me React step by step as a beginner, using simple examples.')}>
                         <Bot size={18} /><span><strong>Learn something</strong><small>Build a new skill step by step</small></span>
                       </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Mere liye aaj ka ek practical study and coding plan banao, breaks ke saath.')}>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Create a practical study and coding plan for today, including breaks.')}>
                         <MessageSquare size={18} /><span><strong>Plan my day</strong><small>Make a focused study plan</small></span>
                       </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Explain a difficult topic in simple Hinglish with a small example, then ask me one question to check my understanding.')}>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Explain a difficult topic in simple English with a small example, then ask me one question to check my understanding.')}>
                         <GraduationCap size={18} /><span><strong>Explain a topic</strong><small>Simple explanation with example</small></span>
                       </button>
                       <button type="button" className="prompt-card" onClick={() => sendMessage('Help me write, improve, or debug a Python program. First ask what I want the program to do, then explain the solution step by step.')}>
                         <Code2 size={18} /><span><strong>Python help</strong><small>Write, understand or debug code</small></span>
                       </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare for an upcoming exam. Ask my subject, exam date, syllabus progress, and daily available time, then create a practical revision plan.')}>
+                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare for an upcoming exam. Ask for my subject, exam date, syllabus progress, and daily available study time, then create a practical revision plan.')}>
                         <GraduationCap size={18} /><span><strong>Exam study plan</strong><small>Prepare with focused revision</small></span>
                       </button>
                     </>

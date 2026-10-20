@@ -415,7 +415,7 @@ async def save_assistant_message(client_id, chat_id, message):
     )
 
 
-async def build_context(client_id, chat_id, message, guest_history=None):
+async def build_context(client_id, chat_id, message, guest_history=None, mode="chat"):
     parts = []
     history = []
 
@@ -545,22 +545,43 @@ RESPONSE RULES:
         "seventh semester", "eighth semester",
     )
 
-    if any(keyword in msg for keyword in interview_keywords):
+    # The selected frontend mode is authoritative. Only suggest switching modes
+    # from Normal Mode; never tell users to switch when they are already in that mode.
+    if mode == "beu":
+        parts.append("""
+ACTIVE MODE: BEU STUDY MODE
+You are currently in BEU Study Mode. Answer the user's question directly in this mode.
+Help with Bihar Engineering University (BEU) topics, B.Tech subjects, syllabus,
+semester-wise notes, exam preparation, previous-year questions, and concepts.
+Ask a clarifying question only when the branch, semester, subject, or syllabus version
+is necessary. Never tell the user to switch to BEU Mode while this mode is active.
+Do not claim generated practice questions are actual PYQs, and be clear when current
+official syllabus information cannot be verified.
+""")
+
+    elif mode == "interview":
+        parts.append("""
+ACTIVE MODE: INTERVIEW MODE
+You are currently in Interview Mode. Answer directly with focused interview preparation,
+mock interviews, DSA, HR questions, project explanations, resume feedback, and technical
+concepts. Ask one interview question at a time during mock practice. Never tell the user
+to switch to Interview Mode while this mode is active.
+""")
+
+    elif any(keyword in msg for keyword in interview_keywords):
         parts.append("""
 MODE GUIDANCE:
-This appears to be an interview-preparation question.
-Politely ask the user to switch to Interview Mode for focused
-interview preparation. Keep the response brief and do not answer
-the full interview question in Normal Mode.
+This appears to be an interview-preparation question in Normal Mode.
+Briefly suggest Interview Mode as an optional focused workspace, but still answer
+the user's actual question helpfully. Do not refuse to answer solely because of mode.
 """)
 
     elif any(keyword in msg for keyword in beu_keywords):
         parts.append("""
 MODE GUIDANCE:
-This appears to be a BEU B.Tech CSE semester-related question.
-Politely ask the user to switch to BEU Mode for focused,
-semester-specific assistance. Keep the response brief and do not
-answer the full university-specific question in Normal Mode.
+This appears to be a BEU or semester-related question in Normal Mode.
+Briefly suggest BEU Study Mode as an optional focused workspace, but still answer
+the user's actual question helpfully. Do not refuse to answer solely because of mode.
 """)
 
     for item in history:
@@ -677,6 +698,7 @@ async def chat(
         request.chat_id,
         message,
         guest_history=request.guest_history if not client_id else None,
+        mode=request.mode,
     )
 
     if client_id:
@@ -730,6 +752,7 @@ async def chat_stream(
         request.chat_id,
         message,
         guest_history=request.guest_history if not client_id else None,
+        mode=request.mode,
     )
 
     if client_id:
