@@ -50,10 +50,17 @@ def require_authenticated_user(request: Request) -> str:
     return user_id
 
 
+class GuestHistoryMessage(BaseModel):
+    sender: Literal["user", "ai"]
+    text: str = Field(max_length=100000)
+
+
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=100000)
     chat_id: str = Field(min_length=1, max_length=128)
     mode: Literal["chat", "beu", "interview"] = "chat"
+    # Used only for unauthenticated guest requests. Never persisted to MongoDB.
+    guest_history: list[GuestHistoryMessage] = Field(default_factory=list, max_length=20)
 
 
 class CreateChatRequest(BaseModel):
@@ -408,12 +415,13 @@ async def save_assistant_message(client_id, chat_id, message):
     )
 
 
-async def build_context(client_id, chat_id, message):
+async def build_context(client_id, chat_id, message, guest_history=None):
     parts = []
     history = []
 
-    # Guests do not read persistent conversation history.
     if client_id:
+        # Signed-in users can only load history scoped to their verified Clerk ID
+        # and the requested chat ID. Ignore any client-supplied guest history.
         cursor = messages_collection.find({
             "owner_id": client_id,
             "chat_id": chat_id,
@@ -424,6 +432,21 @@ async def build_context(client_id, chat_id, message):
 
         history = [item async for item in cursor]
         history.reverse()
+    else:
+        # Guest history is supplied from this tab's sessionStorage-backed UI.
+        # It is used for context only and is never read from/written to MongoDB.
+        for item in (guest_history or [])[-20:]:
+            if isinstance(item, dict):
+                sender = item.get("sender")
+                text = item.get("text")
+            else:
+                sender = getattr(item, "sender", None)
+                text = getattr(item, "text", None)
+            if sender in ("user", "ai") and isinstance(text, str) and text.strip():
+                history.append({
+                    "role": "user" if sender == "user" else "assistant",
+                    "content": text[:100000],
+                })
 
     current_time = datetime.now(timezone.utc).astimezone(
         timezone(timedelta(hours=5, minutes=30))
@@ -541,7 +564,8 @@ answer the full university-specific question in Normal Mode.
 """)
 
     for item in history:
-        role = "User" if item["role"] == "user" else "Assistant"
+        role_value = item.get("role", "user")
+        role = "User" if role_value == "user" else "Assistant"
         parts.append(f'{role}: {item.get("content", "")}')
 
     # Only signed-in users can retrieve saved memories.
@@ -652,6 +676,7 @@ async def chat(
         client_id,
         request.chat_id,
         message,
+        guest_history=request.guest_history if not client_id else None,
     )
 
     if client_id:
@@ -704,6 +729,7 @@ async def chat_stream(
         client_id,
         request.chat_id,
         message,
+        guest_history=request.guest_history if not client_id else None,
     )
 
     if client_id:

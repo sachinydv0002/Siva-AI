@@ -55,32 +55,12 @@ function TrishulMark({ size = 23 }) {
 
 const API_BASE = 'http://127.0.0.1:8000/api'
 const API_URL = `${API_BASE}/chat/stream`
-const CLIENT_ID_STORAGE_KEY = 'siva-ai-client-id'
-
-function getClientId() {
-  try {
-    let clientId = window.localStorage.getItem(CLIENT_ID_STORAGE_KEY)
-    if (!clientId) {
-      clientId = window.crypto?.randomUUID?.()
-        ?? `siva-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`
-      window.localStorage.setItem(CLIENT_ID_STORAGE_KEY, clientId)
-    }
-    return clientId
-  } catch {
-    // A stable ID is needed across requests for this browser profile.
-    return `siva-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`
-  }
-}
-
-const CLIENT_ID = getClientId()
-
 async function historyRequest(path, options = {}, getToken = null) {
   const token = getToken ? await getToken() : null
   const response = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'X-Client-ID': CLIENT_ID,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
@@ -95,6 +75,7 @@ async function historyRequest(path, options = {}, getToken = null) {
 const SIDEBAR_STORAGE_KEY = 'siva-ai-nav-expanded'
 const THEME_STORAGE_KEY = 'siva-ai-theme'
 const APP_STATE_STORAGE_KEY = 'siva-ai-workspace-state-v1'
+const WORKSPACE_OWNER_STORAGE_KEY = 'siva-ai-workspace-owner-v1'
 
 const createChat = (mode = 'chat') => ({
   id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -164,6 +145,7 @@ function WorkspaceApp() {
   const { isLoaded, isSignedIn, getToken } = useAuth()
   const { signOut, openUserProfile } = useClerk()
   const { user } = useUser()
+  const workspaceOwnerKey = isSignedIn && user?.id ? `user:${user.id}` : 'guest'
   const authenticatedHistoryRequest = useCallback(
     (path, options = {}) => historyRequest(path, options, isSignedIn ? getToken : null),
     [getToken, isSignedIn],
@@ -291,9 +273,25 @@ function WorkspaceApp() {
     if (!isLoaded) return () => { cancelled = true }
 
     if (!isSignedIn) {
-      // Guest workspace is tab-scoped: preserve it across refreshes in this tab,
-      // but never write it to localStorage or the server.
-      if (!activeChatIdRef.current) {
+      // A sessionStorage workspace is tab-scoped. Reset it whenever the prior
+      // workspace belonged to an account (or has no trusted owner marker), so
+      // signing out can never expose that account's chats to guest mode.
+      let storedOwner = null
+      try {
+        storedOwner = window.sessionStorage.getItem(WORKSPACE_OWNER_STORAGE_KEY)
+      } catch { /* continue with a fresh guest workspace */ }
+
+      if (storedOwner !== 'guest') {
+        const freshChat = createChat('chat')
+        setChats([freshChat])
+        setActiveChatId(freshChat.id)
+        activeChatIdRef.current = freshChat.id
+        setActiveView('chat')
+        setSelectedMode('chat')
+        try {
+          window.sessionStorage.setItem(WORKSPACE_OWNER_STORAGE_KEY, 'guest')
+        } catch { /* guest chat remains usable in memory */ }
+      } else if (!activeChatIdRef.current || !chatsRef.current.some((chat) => chat.id === activeChatIdRef.current)) {
         const freshChat = createChat('chat')
         setChats([freshChat])
         setActiveChatId(freshChat.id)
@@ -303,6 +301,23 @@ function WorkspaceApp() {
       }
       return () => { cancelled = true }
     }
+
+    // Never merge guest/local chats into a signed-in account. A workspace is
+    // scoped to the verified Clerk user ID and only that user's server history.
+    const accountOwner = `user:${user?.id ?? 'unknown'}`
+    let storedOwner = null
+    try {
+      storedOwner = window.sessionStorage.getItem(WORKSPACE_OWNER_STORAGE_KEY)
+      if (storedOwner !== accountOwner) {
+        const freshChat = createChat('chat')
+        setChats([freshChat])
+        setActiveChatId(freshChat.id)
+        activeChatIdRef.current = freshChat.id
+        setActiveView('chat')
+        setSelectedMode('chat')
+      }
+      window.sessionStorage.setItem(WORKSPACE_OWNER_STORAGE_KEY, accountOwner)
+    } catch { /* account history will still load from the server */ }
 
     async function loadServerHistory() {
       try {
@@ -327,19 +342,14 @@ function WorkspaceApp() {
 
         if (cancelled) return
 
-        // Keep the tab's active conversation. A brand-new tab starts with a
-        // fresh local chat, even when the account already has saved conversations.
+        // Only server chats owned by this verified Clerk user are shown.
+        // Do not merge guest chats or another account's session workspace.
         const currentActiveId = activeChatIdRef.current
-        const localChats = chatsRef.current
-        const serverIds = new Set(completeChats.map((chat) => chat.id))
-        const unsyncedChats = localChats.filter((chat) => !serverIds.has(chat.id))
-        const mergedChats = [...unsyncedChats, ...completeChats]
-        const preferredChat = mergedChats.find((chat) => chat.id === currentActiveId)
-          ?? unsyncedChats[0]
+        const preferredChat = completeChats.find((chat) => chat.id === currentActiveId)
           ?? completeChats[0]
           ?? createChat('chat')
 
-        setChats(mergedChats.length ? mergedChats : [preferredChat])
+        setChats(completeChats.length ? completeChats : [preferredChat])
         setActiveChatId(preferredChat.id)
         activeChatIdRef.current = preferredChat.id
         setActiveView(preferredChat.mode ?? 'chat')
@@ -351,7 +361,7 @@ function WorkspaceApp() {
 
     loadServerHistory()
     return () => { cancelled = true }
-  }, [isLoaded, isSignedIn, authenticatedHistoryRequest])
+  }, [isLoaded, isSignedIn, user?.id, authenticatedHistoryRequest])
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-color-scheme: dark)')
@@ -707,6 +717,16 @@ function WorkspaceApp() {
 
     if (!userMessage || requestInProgressRef.current || !chatId) return
 
+    // Guests keep conversation context only in this tab's sessionStorage-backed
+    // workspace. Send only the messages from the currently selected chat; the
+    // backend never persists guest messages or accepts this history for accounts.
+    const guestHistory = !isSignedIn
+      ? (chatsRef.current.find((chat) => chat.id === chatId)?.messages ?? [])
+          .filter((item) => (item.sender === 'user' || item.sender === 'ai') && typeof item.text === 'string' && item.text.trim())
+          .slice(-20)
+          .map((item) => ({ sender: item.sender, text: item.text.slice(0, 100000) }))
+      : undefined
+
     requestInProgressRef.current = true
     const controller = new AbortController()
     abortControllerRef.current = controller
@@ -744,13 +764,13 @@ function WorkspaceApp() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Client-ID': CLIENT_ID,
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           message: userMessage,
           chat_id: chatId,
           mode: chatsRef.current.find((chat) => chat.id === chatId)?.mode ?? 'chat',
+          ...(!isSignedIn ? { guest_history: guestHistory ?? [] } : {}),
         }),
         signal: controller.signal,
       })
