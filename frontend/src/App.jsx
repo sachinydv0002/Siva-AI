@@ -662,7 +662,9 @@ function WorkspaceApp() {
     const atTop = !messagesContainerRef.current || messagesContainerRef.current.scrollTop <= 0
     touchGestureRef.current = {
       startX: touch.clientX, startY: touch.clientY, lastX: touch.clientX, lastY: touch.clientY,
-      edgeSwipe: touch.clientX <= 28, atTop,
+      // Allow a right-swipe from anywhere on the chat surface to open navigation,
+      // not only from the narrow left screen edge.
+      edgeSwipe: !mobileNavOpen && !event.target.closest?.('.app-sidebar'), atTop,
       eligiblePull: atTop && !mobileNavOpen && !event.target.closest?.('.input-area, .app-sidebar, button, input, textarea, select'),
     }
   }
