@@ -2937,3 +2937,14 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
   .app.mobile-keyboard-open .prompt-cards { display: none !important; }
   .app .mobile-nav-toggle { touch-action: manipulation; }
 }
+
+/* Requested minimal fixes: all welcome modes show at most five suggestions. */
+.welcome .prompt-card:nth-child(n + 6) { display: none !important; }
+/* Account, saved-memory and settings dialogs must sit above the sidebar and chat. */
+.modal-backdrop { position: fixed !important; z-index: 10000 !important; inset: 0 !important; }
+.modal-backdrop .rename-dialog { position: relative; z-index: 10001; max-height: calc(100dvh - 36px); overflow-y: auto; }
+/* Keep mobile sidebar overlays above the workspace; menus remain above sidebar content. */
+@media (max-width: 700px) {
+  .app.mobile-nav-visible .app-sidebar { z-index: 1001 !important; }
+  .app .sidebar-bottom .nav-popover { z-index: 10002 !important; }
+}
