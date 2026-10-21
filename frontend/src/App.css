@@ -3735,3 +3735,62 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
     line-height: 1.25 !important;
   }
 }
+
+/* New-chat mobile keyboard layout only: keep the composer above the keyboard,
+   keep the welcome brand centered, and prevent the page/navigation from moving.
+   Existing conversations deliberately retain their normal scrolling behavior. */
+@media (max-width: 700px) {
+  .app:has(.messages-container .welcome) {
+    height: 100dvh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+  }
+
+  .app:has(.messages-container .welcome) .chat-box {
+    height: 100dvh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .app:has(.messages-container .welcome) .messages-container {
+    min-height: 0 !important;
+    overscroll-behavior: none !important;
+  }
+
+  .app:has(.messages-container .welcome) .input-area {
+    position: fixed !important;
+    left: 8px !important;
+    right: 8px !important;
+    bottom: max(6px, env(safe-area-inset-bottom)) !important;
+    z-index: 1000 !important;
+    width: auto !important;
+    margin: 0 !important;
+  }
+
+  .app:has(.messages-container .welcome) .app-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .app:has(.messages-container .welcome):has(.input-area textarea:focus) .messages-container {
+    overflow: hidden !important;
+  }
+
+  .app:has(.messages-container .welcome):has(.input-area textarea:focus) .messages-content {
+    height: 100% !important;
+    min-height: 0 !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+
+  .app:has(.messages-container .welcome):has(.input-area textarea:focus) .welcome {
+    position: relative !important;
+    top: auto !important;
+    transform: none !important;
+    margin-top: auto !important;
+    margin-bottom: auto !important;
+  }
+}
