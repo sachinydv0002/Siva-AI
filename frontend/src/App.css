@@ -3794,3 +3794,52 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
     margin-bottom: auto !important;
   }
 }
+
+/* Final mobile new-chat keyboard refinement: center the welcome block in the
+   usable area above the composer, and pin the navigation toggle at upper-left.
+   Existing chat scrolling remains untouched. */
+@media (max-width: 700px) {
+  .app:has(.messages-container .welcome):has(.input-area textarea:focus) .messages-container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: calc(150px + env(safe-area-inset-bottom)) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: stretch !important;
+  }
+
+  .app:has(.messages-container .welcome):has(.input-area textarea:focus) .messages-content {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    padding: 0 14px !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+
+  .app:has(.messages-container .welcome):has(.input-area textarea:focus) .welcome {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    margin: auto 0 !important;
+    transform: none !important;
+    top: auto !important;
+    align-self: center !important;
+  }
+
+  .app:has(.messages-container .welcome) .mobile-nav-toggle {
+    position: fixed !important;
+    top: max(8px, env(safe-area-inset-top)) !important;
+    left: 8px !important;
+    right: auto !important;
+    z-index: 1100 !important;
+  }
+}
