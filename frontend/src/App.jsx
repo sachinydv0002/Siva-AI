@@ -1279,6 +1279,35 @@ function WorkspaceApp() {
       </aside>
 
       <main className="main-workspace">
+        {isLoaded && !isSignedIn && messages.length === 0 && (
+          <a
+            href="/sign-in"
+            className="guest-sign-in-button"
+            style={{
+              position: 'absolute',
+              top: 16,
+              right: 18,
+              zIndex: 20,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 7,
+              minHeight: 38,
+              padding: '0 16px',
+              border: '1px solid var(--border, rgba(128,128,128,.28))',
+              borderRadius: 999,
+              background: 'var(--panel, #fff)',
+              color: 'var(--text, #172033)',
+              fontSize: 14,
+              fontWeight: 600,
+              textDecoration: 'none',
+              boxShadow: '0 2px 10px rgba(0,0,0,.08)',
+            }}
+          >
+            <LogIn size={16} />
+            Sign in
+          </a>
+        )}
         <button
           type="button"
           className="mobile-nav-toggle"
