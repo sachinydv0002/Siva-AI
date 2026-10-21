@@ -3664,3 +3664,13 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
     z-index: 99999 !important;
   }
 }
+
+/* Final phone-only cap: show exactly the first five suggestions on every welcome mode. */
+@media (max-width: 700px) {
+  .app .welcome .prompt-cards > button.prompt-card:nth-of-type(n + 6),
+  .app .welcome.beu-welcome .prompt-cards > button.prompt-card:nth-of-type(n + 6),
+  .app .welcome.interview-welcome .prompt-cards > button.prompt-card:nth-of-type(n + 6) {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
