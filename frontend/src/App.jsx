@@ -166,10 +166,8 @@ function WorkspaceApp() {
   const [isStreaming, setIsStreaming] = useState(false)
   const [isNavExpanded, setIsNavExpanded] = useState(getSavedSidebarState)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [mobileKeyboardOpen, setMobileKeyboardOpen] = useState(false)
-  const [pullRefreshProgress, setPullRefreshProgress] = useState(0)
-  const [isPullRefreshing, setIsPullRefreshing] = useState(false)
-  const touchStartRef = useRef(null)
+  const [pullDistance, setPullDistance] = useState(0)
+  const touchGestureRef = useRef(null)
   const [theme, setTheme] = useState(() => {
     try {
       const saved = window.localStorage.getItem(THEME_STORAGE_KEY)
@@ -403,36 +401,6 @@ function WorkspaceApp() {
     return () => {
       abortControllerRef.current?.abort()
       if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current)
-    }
-  }, [])
-
-  // Track the real mobile keyboard/visual viewport so welcome content stays visible.
-  useEffect(() => {
-    const root = document.querySelector('.app')
-    const viewport = window.visualViewport
-    const baselineHeight = { value: window.innerHeight }
-    const updateKeyboardState = () => {
-      const isMobile = window.matchMedia('(max-width: 700px) and (orientation: portrait)').matches
-      const focusedComposer = document.activeElement === textareaRef.current
-      const reducedViewport = viewport ? (baselineHeight.value - viewport.height) > 140 : false
-      const open = isMobile && focusedComposer && reducedViewport
-      setMobileKeyboardOpen(open)
-      if (root && viewport) root.style.setProperty('--mobile-viewport-height', `${Math.round(viewport.height)}px`)
-      if (!focusedComposer && root) root.style.removeProperty('--mobile-viewport-height')
-    }
-    const onFocusIn = (event) => { if (event.target === textareaRef.current) updateKeyboardState() }
-    const onFocusOut = () => window.setTimeout(updateKeyboardState, 80)
-    viewport?.addEventListener('resize', updateKeyboardState)
-    window.addEventListener('resize', updateKeyboardState)
-    document.addEventListener('focusin', onFocusIn)
-    document.addEventListener('focusout', onFocusOut)
-    updateKeyboardState()
-    return () => {
-      viewport?.removeEventListener('resize', updateKeyboardState)
-      window.removeEventListener('resize', updateKeyboardState)
-      document.removeEventListener('focusin', onFocusIn)
-      document.removeEventListener('focusout', onFocusOut)
-      if (root) root.style.removeProperty('--mobile-viewport-height')
     }
   }, [])
 
@@ -688,6 +656,54 @@ function WorkspaceApp() {
     setAccountOpen(false)
   }
 
+  function handleMobileTouchStart(event) {
+    if (event.touches.length !== 1) return
+    const touch = event.touches[0]
+    const atTop = !messagesContainerRef.current || messagesContainerRef.current.scrollTop <= 0
+    touchGestureRef.current = {
+      startX: touch.clientX, startY: touch.clientY, lastX: touch.clientX, lastY: touch.clientY,
+      edgeSwipe: touch.clientX <= 28, atTop,
+      eligiblePull: atTop && !mobileNavOpen && !event.target.closest?.('.input-area, .app-sidebar, button, input, textarea, select'),
+    }
+  }
+
+  function handleMobileTouchMove(event) {
+    const gesture = touchGestureRef.current
+    if (!gesture || event.touches.length !== 1) return
+    const touch = event.touches[0]
+    gesture.lastX = touch.clientX
+    gesture.lastY = touch.clientY
+    const dx = touch.clientX - gesture.startX
+    const dy = touch.clientY - gesture.startY
+    if (mobileNavOpen && dx < -55 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+      setMobileNavOpen(false)
+      setSocialOpen(false)
+      setAccountOpen(false)
+      touchGestureRef.current = null
+      return
+    }
+    if (gesture.edgeSwipe && dx > 65 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+      setMobileNavOpen(true)
+      setSocialOpen(false)
+      setAccountOpen(false)
+      touchGestureRef.current = null
+      return
+    }
+    if (gesture.eligiblePull && dy > 0 && Math.abs(dy) > Math.abs(dx) * 1.25) {
+      const container = messagesContainerRef.current
+      if (container && container.scrollTop > 0) return
+      setPullDistance(Math.min(100, dy * 0.55))
+      if (event.cancelable) event.preventDefault()
+    }
+  }
+
+  function handleMobileTouchEnd() {
+    const shouldRefresh = pullDistance >= 58
+    touchGestureRef.current = null
+    setPullDistance(0)
+    if (shouldRefresh) window.location.reload()
+  }
+
   function handleModeChange(nextMode) {
     // Change the mode on the current conversation; do not create a new chat.
     setActiveView(nextMode)
@@ -936,52 +952,15 @@ function WorkspaceApp() {
 
   return (
     <div
-      className={`app ${isNavExpanded ? 'sidebar-open' : 'sidebar-closed'} ${mobileNavOpen ? 'mobile-nav-visible' : ''} ${mobileKeyboardOpen ? 'mobile-keyboard-open' : ''} ${socialOpen ? 'social-popover-open' : ''} ${accountOpen ? 'account-popover-open' : ''}`}
-      onTouchStart={(event) => {
-        const touch = event.touches[0]
-        if (touch) touchStartRef.current = { x: touch.clientX, y: touch.clientY, atTop: messagesContainerRef.current?.scrollTop <= 0 }
-      }}
-      onTouchMove={(event) => {
-        const start = touchStartRef.current
-        const touch = event.touches[0]
-        if (!start || !touch || mobileNavOpen || mobileKeyboardOpen || isPullRefreshing) return
-        const dy = touch.clientY - start.y
-        const isMobile = window.matchMedia('(max-width: 700px) and (orientation: portrait)').matches
-        if (isMobile && start.atTop && start.y < 100 && dy > 0 && Math.abs(touch.clientX - start.x) < 45) {
-          setPullRefreshProgress(Math.min(1, dy / 110))
-        }
-      }}
-      onTouchEnd={(event) => {
-        const start = touchStartRef.current
-        const touch = event.changedTouches[0]
-        if (!start || !touch) return
-        const dx = touch.clientX - start.x
-        const dy = touch.clientY - start.y
-        const isMobile = window.matchMedia('(max-width: 700px) and (orientation: portrait)').matches
-        if (isMobile && start.x <= 24 && dx > 70 && Math.abs(dy) < 70 && !mobileNavOpen) {
-          setMobileNavOpen(true)
-          setPullRefreshProgress(0)
-          setSocialOpen(false)
-          setAccountOpen(false)
-        } else if (isMobile && mobileNavOpen && dx < -70 && Math.abs(dy) < 70) {
-          setMobileNavOpen(false)
-          setPullRefreshProgress(0)
-          setSocialOpen(false)
-          setAccountOpen(false)
-        } else if (isMobile && start.atTop && dy > 110 && Math.abs(dx) < 60 && !mobileNavOpen && !mobileKeyboardOpen) {
-          setIsPullRefreshing(true)
-          setPullRefreshProgress(1)
-          window.setTimeout(() => window.location.reload(), 450)
-        } else {
-          setPullRefreshProgress(0)
-        }
-        touchStartRef.current = null
-      }}
+      className={`app ${isNavExpanded ? 'sidebar-open' : 'sidebar-closed'} ${mobileNavOpen ? 'mobile-nav-visible' : ''} ${socialOpen ? 'social-popover-open' : ''} ${accountOpen ? 'account-popover-open' : ''}`}
+      onTouchStart={handleMobileTouchStart}
+      onTouchMove={handleMobileTouchMove}
+      onTouchEnd={handleMobileTouchEnd}
+      onTouchCancel={handleMobileTouchEnd}
     >
-      {pullRefreshProgress > 0 && !mobileKeyboardOpen && (
-        <div className={`pull-refresh-indicator ${isPullRefreshing ? 'refreshing' : ''}`} role="status" aria-live="polite" style={{ '--pull-progress': pullRefreshProgress }}>
-          <span className="pull-refresh-spinner" />
-          <span>{isPullRefreshing ? 'Refreshing…' : 'Pull to refresh'}</span>
+      {pullDistance > 0 && !mobileNavOpen && (
+        <div className="mobile-pull-indicator" style={{ transform: `translate(-50%, ${pullDistance}px)` }} aria-live="polite">
+          <RotateCcw size={19} className={pullDistance >= 58 ? 'ready' : ''} />
         </div>
       )}
       <aside className="app-sidebar glass" aria-label="Siva AI sidebar" ref={sidebarRef}>
@@ -1414,12 +1393,6 @@ function WorkspaceApp() {
                         </button>
                         <button type="button" className="prompt-card" onClick={() => sendMessage('Explain a difficult topic in simple English with a small example, then ask me one question to check my understanding.')}>
                           <GraduationCap size={18} /><span><strong>Explain a topic</strong><small>Simple explanation with example</small></span>
-                        </button>
-                        <button type="button" className="prompt-card" onClick={() => sendMessage('Help me write, improve, or debug a Python program. First ask what I want the program to do, then explain the solution step by step.')}>
-                          <Code2 size={18} /><span><strong>Python help</strong><small>Write, understand or debug code</small></span>
-                        </button>
-                        <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare for an upcoming exam. Ask for my subject, exam date, syllabus progress, and daily available study time, then create a practical revision plan.')}>
-                          <GraduationCap size={18} /><span><strong>Exam study plan</strong><small>Prepare with focused revision</small></span>
                         </button>
                       </>
                     )}
