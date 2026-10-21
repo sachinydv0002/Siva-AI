@@ -725,9 +725,9 @@ function WorkspaceApp() {
     // backend never persists guest messages or accepts this history for accounts.
     const guestHistory = !isSignedIn
       ? (chatsRef.current.find((chat) => chat.id === chatId)?.messages ?? [])
-          .filter((item) => (item.sender === 'user' || item.sender === 'ai') && typeof item.text === 'string' && item.text.trim())
-          .slice(-20)
-          .map((item) => ({ sender: item.sender, text: item.text.slice(0, 100000) }))
+        .filter((item) => (item.sender === 'user' || item.sender === 'ai') && typeof item.text === 'string' && item.text.trim())
+        .slice(-20)
+        .map((item) => ({ sender: item.sender, text: item.text.slice(0, 100000) }))
       : undefined
 
     requestInProgressRef.current = true
@@ -750,13 +750,13 @@ function WorkspaceApp() {
       previous.map((chat) =>
         chat.id === chatId && chat.title === 'New chat'
           ? {
-              ...chat,
-              title:
-                userMessage.length > 36
-                  ? `${userMessage.slice(0, 36)}…`
-                  : userMessage,
-              updatedAt: Date.now(),
-            }
+            ...chat,
+            title:
+              userMessage.length > 36
+                ? `${userMessage.slice(0, 36)}…`
+                : userMessage,
+            updatedAt: Date.now(),
+          }
           : chat,
       ),
     )
@@ -767,7 +767,7 @@ function WorkspaceApp() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           message: userMessage,
@@ -941,12 +941,11 @@ function WorkspaceApp() {
                 <button
                   type="button"
                   key={label}
-                  className={`nav-rail-item ${
-                    (label === 'BEU Mode' && activeView === 'beu') ||
-                    (label === 'Interview Mode' && activeView === 'interview')
+                  className={`nav-rail-item ${(label === 'BEU Mode' && activeView === 'beu') ||
+                      (label === 'Interview Mode' && activeView === 'interview')
                       ? 'active'
                       : ''
-                  }`}
+                    }`}
                   data-tooltip={label}
                   aria-label={label}
                   onMouseEnter={(event) => showSidebarTooltip(event, label)}
@@ -973,97 +972,97 @@ function WorkspaceApp() {
           </div>
 
           <section className="history-section" aria-label="Recent chats">
-          {isNavExpanded && (
-            <>
-              <div className="history-heading">
-                <span>Recent chats</span>
-                <MessageSquare size={15} />
-              </div>
-              <div className="history-search">
-                <Search size={15} />
-                <input
-                  type="search"
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="Search chats"
-                  aria-label="Search recent chats"
-                />
-                {searchQuery && (
-                  <button type="button" onClick={() => setSearchQuery('')} aria-label="Clear search">
-                    <X size={13} />
-                  </button>
-                )}
-              </div>
-            </>
-          )}
-
-          <div className="history-list">
-            {isNavExpanded && (!isLoaded || !isSignedIn) ? (
-              <div className="history-auth-prompt">
-                <p>{isLoaded
-                  ? 'Sign in to save and revisit your chats.'
-                  : 'Sign in to save and revisit your chats.'}</p>
-                <a href="/sign-in" className="history-auth-button">Log in</a>
-                <a href="/sign-up" className="history-auth-button secondary">Sign up</a>
-              </div>
-            ) : isNavExpanded && (
-              filteredChats.length === 0 ? (
-                <p className="empty-history">No matching conversations</p>
-              ) : (
-                filteredChats.map((chat) => (
-                  <div key={chat.id} className={`chat-history-wrap ${chat.id === activeChat?.id ? 'active' : ''} ${chat.pinned ? 'pinned' : ''}`}>
-                    <button
-                      type="button"
-                      className={`chat-history ${chat.id === activeChat?.id ? 'active' : ''}`}
-                      onClick={() => handleSelectChat(chat.id)}
-                      data-tooltip={chat.title}
-                    >
-                      {chat.pinned ? <Pin size={14} strokeWidth={1.8} /> : <MessageSquare size={15} strokeWidth={1.7} />}
-                      <span>{chat.title}</span>
+            {isNavExpanded && (
+              <>
+                <div className="history-heading">
+                  <span>Recent chats</span>
+                  <MessageSquare size={15} />
+                </div>
+                <div className="history-search">
+                  <Search size={15} />
+                  <input
+                    type="search"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="Search chats"
+                    aria-label="Search recent chats"
+                  />
+                  {searchQuery && (
+                    <button type="button" onClick={() => setSearchQuery('')} aria-label="Clear search">
+                      <X size={13} />
                     </button>
-                    <div className="chat-history-actions">
+                  )}
+                </div>
+              </>
+            )}
+
+            <div className="history-list">
+              {isNavExpanded && (!isLoaded || !isSignedIn) ? (
+                <div className="history-auth-prompt">
+                  <p>{isLoaded
+                    ? 'Sign in to save and revisit your chats.'
+                    : 'Sign in to save and revisit your chats.'}</p>
+                  <a href="/sign-in" className="history-auth-button">Log in</a>
+                  <a href="/sign-up" className="history-auth-button secondary">Sign up</a>
+                </div>
+              ) : isNavExpanded && (
+                filteredChats.length === 0 ? (
+                  <p className="empty-history">No matching conversations</p>
+                ) : (
+                  filteredChats.map((chat) => (
+                    <div key={chat.id} className={`chat-history-wrap ${chat.id === activeChat?.id ? 'active' : ''} ${chat.pinned ? 'pinned' : ''}`}>
                       <button
                         type="button"
-                        className={`chat-more-button ${openChatMenuId === chat.id ? 'open' : ''}`}
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          if (openChatMenuId === chat.id) {
-                            setOpenChatMenuId(null)
-                          } else {
-                            const rect = event.currentTarget.getBoundingClientRect()
-                            const menuHeight = 132
-                            const top = rect.bottom + menuHeight + 8 > window.innerHeight
-                              ? Math.max(8, rect.top - menuHeight - 6)
-                              : rect.bottom + 6
-                            setChatMenuPosition({ top, right: Math.max(8, window.innerWidth - rect.right) })
-                            setOpenChatMenuId(chat.id)
-                          }
-                        }}
-                        data-tooltip="More options"
-                        aria-label={`More options for ${chat.title}`}
-                        aria-haspopup="menu"
-                        aria-expanded={openChatMenuId === chat.id}
+                        className={`chat-history ${chat.id === activeChat?.id ? 'active' : ''}`}
+                        onClick={() => handleSelectChat(chat.id)}
+                        data-tooltip={chat.title}
                       >
-                        <MoreHorizontal size={17} />
+                        {chat.pinned ? <Pin size={14} strokeWidth={1.8} /> : <MessageSquare size={15} strokeWidth={1.7} />}
+                        <span>{chat.title}</span>
                       </button>
-                      {openChatMenuId === chat.id && (
-                        <div className="chat-options-menu" role="menu" aria-label={`Options for ${chat.title}`} style={{ top: chatMenuPosition.top, right: chatMenuPosition.right }}>
-                          <button type="button" role="menuitem" onClick={() => { togglePinnedChat(chat.id); setOpenChatMenuId(null) }}>
-                            <Pin size={14} /> {chat.pinned ? 'Unpin chat' : 'Pin chat'}
-                          </button>
-                          <button type="button" role="menuitem" onClick={() => { openRenameDialog(chat); setOpenChatMenuId(null) }}>
-                            <Pencil size={14} /> Rename chat
-                          </button>
-                          <button type="button" role="menuitem" className="delete-option" onClick={() => { setDeleteChatId(chat.id); setOpenChatMenuId(null) }}>
-                            <Trash2 size={14} /> Delete chat
-                          </button>
-                        </div>
-                      )}
+                      <div className="chat-history-actions">
+                        <button
+                          type="button"
+                          className={`chat-more-button ${openChatMenuId === chat.id ? 'open' : ''}`}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            if (openChatMenuId === chat.id) {
+                              setOpenChatMenuId(null)
+                            } else {
+                              const rect = event.currentTarget.getBoundingClientRect()
+                              const menuHeight = 132
+                              const top = rect.bottom + menuHeight + 8 > window.innerHeight
+                                ? Math.max(8, rect.top - menuHeight - 6)
+                                : rect.bottom + 6
+                              setChatMenuPosition({ top, right: Math.max(8, window.innerWidth - rect.right) })
+                              setOpenChatMenuId(chat.id)
+                            }
+                          }}
+                          data-tooltip="More options"
+                          aria-label={`More options for ${chat.title}`}
+                          aria-haspopup="menu"
+                          aria-expanded={openChatMenuId === chat.id}
+                        >
+                          <MoreHorizontal size={17} />
+                        </button>
+                        {openChatMenuId === chat.id && (
+                          <div className="chat-options-menu" role="menu" aria-label={`Options for ${chat.title}`} style={{ top: chatMenuPosition.top, right: chatMenuPosition.right }}>
+                            <button type="button" role="menuitem" onClick={() => { togglePinnedChat(chat.id); setOpenChatMenuId(null) }}>
+                              <Pin size={14} /> {chat.pinned ? 'Unpin chat' : 'Pin chat'}
+                            </button>
+                            <button type="button" role="menuitem" onClick={() => { openRenameDialog(chat); setOpenChatMenuId(null) }}>
+                              <Pencil size={14} /> Rename chat
+                            </button>
+                            <button type="button" role="menuitem" className="delete-option" onClick={() => { setDeleteChatId(chat.id); setOpenChatMenuId(null) }}>
+                              <Trash2 size={14} /> Delete chat
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))
-              ))}
-          </div>
+                  ))
+                ))}
+            </div>
           </section>
         </div>
 
@@ -1209,6 +1208,14 @@ function WorkspaceApp() {
       </aside>
 
       <main className="main-workspace">
+        <button
+          type="button"
+          className="mobile-nav-toggle"
+          onClick={toggleNav}
+          aria-label="Open navigation"
+        >
+          <PanelLeftOpen size={20} />
+        </button>
         <section className="chat-box">
           <div
             className="messages-container"
@@ -1216,219 +1223,218 @@ function WorkspaceApp() {
             onScroll={handleMessagesScroll}
           >
             <div className="messages-content">
-            {messages.length === 0 ? (
-              <div
-                className={`welcome ${
-                  activeView === 'beu'
+              {messages.length === 0 ? (
+                <div
+                  className={`welcome ${activeView === 'beu'
                       ? 'beu-welcome'
                       : activeView === 'interview'
                         ? 'interview-welcome'
                         : ''
-                }`}
-              >
-                <div className="welcome-brand-mark" aria-hidden="true">
-                  <TrishulMark size={25} strokeWidth={1.7} />
-                </div>
-                <h1>
-                  {activeView === 'beu'
-                    ? 'BEU Study Mode'
-                    : activeView === 'interview'
-                      ? 'Interview Mode'
-                      : 'Welcome to Siva AI'}
-                </h1>
-                <p>
-                  {activeView === 'beu'
-                    ? 'A dedicated study space for Bihar Engineering University syllabi, subjects, previous-year questions, and exam preparation.'
-                    : activeView === 'interview'
-                      ? 'Prepare for technical and HR interviews with structured practice, clear explanations, and actionable feedback.'
-                      : 'Your ideas, questions, and code — let’s work on them together.'}
-                </p>
-                <div className="prompt-cards">
-                  {activeView === 'beu' ? (
-                    <>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Explain Bihar Engineering University (BEU), including its overview, academic system, semester structure, examination process, grading, and useful official student resources. Clearly flag any information that needs current verification, and ask me for my course and branch.') }>
-                        <GraduationCap size={18} /><span><strong>Learn about BEU</strong><small>University, semesters, and exams</small></span>
-                      </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me understand and organize my BEU syllabus. First ask for my course, branch, semester, and subject. Then list the syllabus unit by unit with learning outcomes and priorities. Do not present a syllabus as verified unless an official document is available.') }>
-                        <MessageSquare size={18} /><span><strong>Syllabus and unit-wise topics</strong><small>Based on branch, semester, and subject</small></span>
-                      </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare for my BEU exams. First ask for my branch, semester, subjects, and exam date. Then create a realistic daily timetable with unit-wise targets, revision sessions, and mock tests.') }>
-                        <Pencil size={18} /><span><strong>Exam preparation plan</strong><small>Timetable, revision, and priority topics</small></span>
-                      </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare using BEU previous-year questions (PYQs). First ask for my branch, semester, subject, and available exam years or papers. Organize questions by topic and identify recurring themes. If actual papers are unavailable, clearly label generated questions as practice questions, not real PYQs.') }>
-                        <Bot size={18} /><span><strong>Previous-year question practice</strong><small>Past papers and topic-wise practice</small></span>
-                      </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me practise writing marks-oriented answers for BEU exams. Ask for the subject, unit, marks (2, 5, 10, or 15), and question. Then structure the answer with a definition, headings, suggested diagrams, examples, and a conclusion.') }>
-                        <Pencil size={18} /><span><strong>Answer-writing practice</strong><small>Answers for 2, 5, 10, or 15 marks</small></span>
-                      </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me revise key concepts for BEU, subject by subject. First ask for my branch, semester, and subject, then provide unit-wise quick notes, key formulas and definitions, and a short recap. Do not guarantee that any topic will appear on an exam.') }>
-                        <Sparkles size={18} /><span><strong>Quick notes and revision</strong><small>Definitions, formulas, and concise notes</small></span>
-                      </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Test me on a BEU subject. First ask for my branch, semester, subject, and unit. Then ask multiple-choice, short-answer, and long-answer questions one at a time. After each response, explain the answer and track my score and weak areas.') }>
-                        <Code2 size={18} /><span><strong>Practice test</strong><small>Quiz, score, and weak-area analysis</small></span>
-                      </button>
-                    </>
-                  ) : activeView === 'interview' ? (
-                    <>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Act as a technical interviewer for a CSE candidate. Ask my target role, experience level, and preferred topics, then conduct a realistic mock interview one question at a time. Give feedback after each answer.')}>
-                        <BriefcaseBusiness size={18} /><span><strong>Mock interview</strong><small>Realistic interview practice</small></span>
-                      </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare for a DSA interview. Ask my target company or difficulty level, then give one problem at a time. Let me attempt it before revealing hints or a solution; review time and space complexity.')}>
-                        <Code2 size={18} /><span><strong>DSA practice</strong><small>Problems, hints and complexity</small></span>
-                      </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Conduct an HR interview practice session. Ask one common HR question at a time, let me answer, then critique clarity, structure, relevance, and authenticity and help me improve it.')}>
-                        <Users size={18} /><span><strong>HR questions</strong><small>Build clear, authentic answers</small></span>
-                      </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare my project explanation for interviews. Ask me about the project, tech stack, my contribution, architecture, challenges, and outcomes, then help craft a concise and technically credible explanation.')}>
-                        <MessageSquare size={18} /><span><strong>Explain my project</strong><small>Present your work confidently</small></span>
-                      </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare a strong self-introduction for a fresher software engineering interview. Ask about my education, skills, projects, and goals, then help me make a natural 60-90 second answer.')}>
-                        <UserRound size={18} /><span><strong>Self introduction</strong><small>Build a clear fresher intro</small></span>
-                      </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Quiz me on core computer science interview topics such as DBMS, operating systems, computer networks, and OOP. Ask which topic and difficulty I prefer, then ask one question at a time and explain my mistakes.')}>
-                        <Bot size={18} /><span><strong>Core CS questions</strong><small>DBMS, OS, CN and OOP</small></span>
-                      </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Review my resume for a fresher software developer role. Ask me to paste the resume and target job description, then suggest specific improvements without inventing experience or skills.')}>
-                        <Folder size={18} /><span><strong>Resume review</strong><small>Improve resume for the role</small></span>
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage("Tell me today's date and important historical events associated with this day.")}> 
-                        <Sparkles size={18} /><span><strong>Today in focus</strong><small>Learn about this day</small></span>
-                      </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me debug my code. First ask me to share the code and error message, then troubleshoot it step by step.')}>
-                        <Code2 size={18} /><span><strong>Debug code</strong><small>Find and fix an issue</small></span>
-                      </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Teach me React step by step as a beginner, using simple examples.')}>
-                        <Bot size={18} /><span><strong>Learn something</strong><small>Build a new skill step by step</small></span>
-                      </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Create a practical study and coding plan for today, including breaks.')}>
-                        <MessageSquare size={18} /><span><strong>Plan my day</strong><small>Make a focused study plan</small></span>
-                      </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Explain a difficult topic in simple English with a small example, then ask me one question to check my understanding.')}>
-                        <GraduationCap size={18} /><span><strong>Explain a topic</strong><small>Simple explanation with example</small></span>
-                      </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me write, improve, or debug a Python program. First ask what I want the program to do, then explain the solution step by step.')}>
-                        <Code2 size={18} /><span><strong>Python help</strong><small>Write, understand or debug code</small></span>
-                      </button>
-                      <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare for an upcoming exam. Ask for my subject, exam date, syllabus progress, and daily available study time, then create a practical revision plan.')}>
-                        <GraduationCap size={18} /><span><strong>Exam study plan</strong><small>Prepare with focused revision</small></span>
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="message-list">
-                {messages.map((msg, index) => (
-                  <div
-                    className={`message-row ${msg.sender}`}
-                    key={`${activeChat?.id}-${index}`}
-                  >
-                    <article className={`message ${msg.sender}`}>
-                      <div className="message-body">
-                        {editingMessage?.chatId === activeChat?.id && editingMessage?.index === index ? (
-                          <form className="inline-message-editor" onSubmit={submitEditedMessage}>
-                            <textarea
-                              autoFocus
-                              value={editingMessage.draft ?? editingMessage.originalText}
-                              onChange={(event) => setEditingMessage((current) => current ? { ...current, draft: event.target.value } : current)}
-                              aria-label="Edit original message"
-                              rows={Math.min(8, Math.max(1, (editingMessage.draft ?? editingMessage.originalText).split('\n').length))}
-                              onFocus={(event) => {
-                                const end = event.currentTarget.value.length
-                                event.currentTarget.setSelectionRange(end, end)
-                              }}
-                            />
-                            <div className="inline-message-edit-actions">
-                              <button type="button" className="inline-edit-cancel" onClick={cancelMessageEdit}>Cancel</button>
-                              <button type="submit" className="inline-edit-save" disabled={!(editingMessage.draft ?? editingMessage.originalText).trim()}>send</button>
-                            </div>
-                          </form>
-                        ) : msg.sender === 'ai' ? (
-                          msg.text ? (
-                            <ReactMarkdown
-                              components={{
-                                pre({ children, ...props }) {
-                                  const codeText = String(children?.props?.children ?? children ?? '')
-                                  return (
-                                    <div className="code-block-wrap">
-                                      <pre {...props}>{children}</pre>
-                                      <button
-                                        type="button"
-                                        className="code-copy-btn"
-                                        onClick={() => copyText(codeText, 'Code copied')}
-                                        aria-label="Copy code"
-                                        data-tooltip="Copy code"
-                                      >
-                                        <Copy size={15} />
-                                      </button>
-                                    </div>
-                                  )
-                                },
-                              }}
-                            >
-                              {msg.text}
-                            </ReactMarkdown>
-                          ) : isStreaming && index === messages.length - 1 ? (
-                            <span className="typing-indicator" aria-label="Thinking">
-                              <span /><span /><span />
-                            </span>
-                          ) : null
-                        ) : (
-                          msg.text
-                        )}
-                      </div>
-                    </article>
-                    {msg.text && !(editingMessage?.chatId === activeChat?.id && editingMessage?.index === index) && (
-                      <div className="message-actions">
-                        <button
-                          type="button"
-                          onClick={() => copyText(msg.text, 'Message copied')}
-                          aria-label="Copy message"
-                          data-tooltip="Copy message"
-                        >
-                          <Copy size={15} />
+                    }`}
+                >
+                  <div className="welcome-brand-mark" aria-hidden="true">
+                    <TrishulMark size={25} strokeWidth={1.7} />
+                  </div>
+                  <h1>
+                    {activeView === 'beu'
+                      ? 'BEU Study Mode'
+                      : activeView === 'interview'
+                        ? 'Interview Mode'
+                        : 'Welcome to Siva AI'}
+                  </h1>
+                  <p>
+                    {activeView === 'beu'
+                      ? 'A dedicated study space for Bihar Engineering University syllabi, subjects, previous-year questions, and exam preparation.'
+                      : activeView === 'interview'
+                        ? 'Prepare for technical and HR interviews with structured practice, clear explanations, and actionable feedback.'
+                        : 'Your ideas, questions, and code — let’s work on them together.'}
+                  </p>
+                  <div className="prompt-cards">
+                    {activeView === 'beu' ? (
+                      <>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Explain Bihar Engineering University (BEU), including its overview, academic system, semester structure, examination process, grading, and useful official student resources. Clearly flag any information that needs current verification, and ask me for my course and branch.')}>
+                          <GraduationCap size={18} /><span><strong>Learn about BEU</strong><small>University, semesters, and exams</small></span>
                         </button>
-                        {msg.sender === 'user' && !isStreaming && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (!activeChat?.id) return
-                              setEditingMessage({ chatId: activeChat.id, index, originalText: msg.text, draft: msg.text })
-                            }}
-                            aria-label="Edit message"
-                            data-tooltip="Edit message"
-                          >
-                            <Pencil size={15} />
-                          </button>
-                        )}
-                        {msg.sender === 'ai' && index === messages.length - 1 && !isStreaming && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const lastUserIndex = messages
-                                .slice(0, index)
-                                .map((item) => item.sender)
-                                .lastIndexOf('user')
-                              if (lastUserIndex < 0 || !activeChat?.id) return
-                              const retryText = messages[lastUserIndex].text
-                              updateChatMessages(activeChat.id, (previous) => previous.slice(0, lastUserIndex))
-                              sendMessage(retryText)
-                            }}
-                            aria-label="Try again"
-                            data-tooltip="Try again"
-                          >
-                            <RotateCcw size={15} />
-                          </button>
-                        )}
-                      </div>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Help me understand and organize my BEU syllabus. First ask for my course, branch, semester, and subject. Then list the syllabus unit by unit with learning outcomes and priorities. Do not present a syllabus as verified unless an official document is available.')}>
+                          <MessageSquare size={18} /><span><strong>Syllabus and unit-wise topics</strong><small>Based on branch, semester, and subject</small></span>
+                        </button>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare for my BEU exams. First ask for my branch, semester, subjects, and exam date. Then create a realistic daily timetable with unit-wise targets, revision sessions, and mock tests.')}>
+                          <Pencil size={18} /><span><strong>Exam preparation plan</strong><small>Timetable, revision, and priority topics</small></span>
+                        </button>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare using BEU previous-year questions (PYQs). First ask for my branch, semester, subject, and available exam years or papers. Organize questions by topic and identify recurring themes. If actual papers are unavailable, clearly label generated questions as practice questions, not real PYQs.')}>
+                          <Bot size={18} /><span><strong>Previous-year question practice</strong><small>Past papers and topic-wise practice</small></span>
+                        </button>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Help me practise writing marks-oriented answers for BEU exams. Ask for the subject, unit, marks (2, 5, 10, or 15), and question. Then structure the answer with a definition, headings, suggested diagrams, examples, and a conclusion.')}>
+                          <Pencil size={18} /><span><strong>Answer-writing practice</strong><small>Answers for 2, 5, 10, or 15 marks</small></span>
+                        </button>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Help me revise key concepts for BEU, subject by subject. First ask for my branch, semester, and subject, then provide unit-wise quick notes, key formulas and definitions, and a short recap. Do not guarantee that any topic will appear on an exam.')}>
+                          <Sparkles size={18} /><span><strong>Quick notes and revision</strong><small>Definitions, formulas, and concise notes</small></span>
+                        </button>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Test me on a BEU subject. First ask for my branch, semester, subject, and unit. Then ask multiple-choice, short-answer, and long-answer questions one at a time. After each response, explain the answer and track my score and weak areas.')}>
+                          <Code2 size={18} /><span><strong>Practice test</strong><small>Quiz, score, and weak-area analysis</small></span>
+                        </button>
+                      </>
+                    ) : activeView === 'interview' ? (
+                      <>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Act as a technical interviewer for a CSE candidate. Ask my target role, experience level, and preferred topics, then conduct a realistic mock interview one question at a time. Give feedback after each answer.')}>
+                          <BriefcaseBusiness size={18} /><span><strong>Mock interview</strong><small>Realistic interview practice</small></span>
+                        </button>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare for a DSA interview. Ask my target company or difficulty level, then give one problem at a time. Let me attempt it before revealing hints or a solution; review time and space complexity.')}>
+                          <Code2 size={18} /><span><strong>DSA practice</strong><small>Problems, hints and complexity</small></span>
+                        </button>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Conduct an HR interview practice session. Ask one common HR question at a time, let me answer, then critique clarity, structure, relevance, and authenticity and help me improve it.')}>
+                          <Users size={18} /><span><strong>HR questions</strong><small>Build clear, authentic answers</small></span>
+                        </button>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare my project explanation for interviews. Ask me about the project, tech stack, my contribution, architecture, challenges, and outcomes, then help craft a concise and technically credible explanation.')}>
+                          <MessageSquare size={18} /><span><strong>Explain my project</strong><small>Present your work confidently</small></span>
+                        </button>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare a strong self-introduction for a fresher software engineering interview. Ask about my education, skills, projects, and goals, then help me make a natural 60-90 second answer.')}>
+                          <UserRound size={18} /><span><strong>Self introduction</strong><small>Build a clear fresher intro</small></span>
+                        </button>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Quiz me on core computer science interview topics such as DBMS, operating systems, computer networks, and OOP. Ask which topic and difficulty I prefer, then ask one question at a time and explain my mistakes.')}>
+                          <Bot size={18} /><span><strong>Core CS questions</strong><small>DBMS, OS, CN and OOP</small></span>
+                        </button>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Review my resume for a fresher software developer role. Ask me to paste the resume and target job description, then suggest specific improvements without inventing experience or skills.')}>
+                          <Folder size={18} /><span><strong>Resume review</strong><small>Improve resume for the role</small></span>
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage("Tell me today's date and important historical events associated with this day.")}>
+                          <Sparkles size={18} /><span><strong>Today in focus</strong><small>Learn about this day</small></span>
+                        </button>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Help me debug my code. First ask me to share the code and error message, then troubleshoot it step by step.')}>
+                          <Code2 size={18} /><span><strong>Debug code</strong><small>Find and fix an issue</small></span>
+                        </button>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Teach me React step by step as a beginner, using simple examples.')}>
+                          <Bot size={18} /><span><strong>Learn something</strong><small>Build a new skill step by step</small></span>
+                        </button>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Create a practical study and coding plan for today, including breaks.')}>
+                          <MessageSquare size={18} /><span><strong>Plan my day</strong><small>Make a focused study plan</small></span>
+                        </button>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Explain a difficult topic in simple English with a small example, then ask me one question to check my understanding.')}>
+                          <GraduationCap size={18} /><span><strong>Explain a topic</strong><small>Simple explanation with example</small></span>
+                        </button>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Help me write, improve, or debug a Python program. First ask what I want the program to do, then explain the solution step by step.')}>
+                          <Code2 size={18} /><span><strong>Python help</strong><small>Write, understand or debug code</small></span>
+                        </button>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare for an upcoming exam. Ask for my subject, exam date, syllabus progress, and daily available study time, then create a practical revision plan.')}>
+                          <GraduationCap size={18} /><span><strong>Exam study plan</strong><small>Prepare with focused revision</small></span>
+                        </button>
+                      </>
                     )}
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ) : (
+                <div className="message-list">
+                  {messages.map((msg, index) => (
+                    <div
+                      className={`message-row ${msg.sender}`}
+                      key={`${activeChat?.id}-${index}`}
+                    >
+                      <article className={`message ${msg.sender}`}>
+                        <div className="message-body">
+                          {editingMessage?.chatId === activeChat?.id && editingMessage?.index === index ? (
+                            <form className="inline-message-editor" onSubmit={submitEditedMessage}>
+                              <textarea
+                                autoFocus
+                                value={editingMessage.draft ?? editingMessage.originalText}
+                                onChange={(event) => setEditingMessage((current) => current ? { ...current, draft: event.target.value } : current)}
+                                aria-label="Edit original message"
+                                rows={Math.min(8, Math.max(1, (editingMessage.draft ?? editingMessage.originalText).split('\n').length))}
+                                onFocus={(event) => {
+                                  const end = event.currentTarget.value.length
+                                  event.currentTarget.setSelectionRange(end, end)
+                                }}
+                              />
+                              <div className="inline-message-edit-actions">
+                                <button type="button" className="inline-edit-cancel" onClick={cancelMessageEdit}>Cancel</button>
+                                <button type="submit" className="inline-edit-save" disabled={!(editingMessage.draft ?? editingMessage.originalText).trim()}>send</button>
+                              </div>
+                            </form>
+                          ) : msg.sender === 'ai' ? (
+                            msg.text ? (
+                              <ReactMarkdown
+                                components={{
+                                  pre({ children, ...props }) {
+                                    const codeText = String(children?.props?.children ?? children ?? '')
+                                    return (
+                                      <div className="code-block-wrap">
+                                        <pre {...props}>{children}</pre>
+                                        <button
+                                          type="button"
+                                          className="code-copy-btn"
+                                          onClick={() => copyText(codeText, 'Code copied')}
+                                          aria-label="Copy code"
+                                          data-tooltip="Copy code"
+                                        >
+                                          <Copy size={15} />
+                                        </button>
+                                      </div>
+                                    )
+                                  },
+                                }}
+                              >
+                                {msg.text}
+                              </ReactMarkdown>
+                            ) : isStreaming && index === messages.length - 1 ? (
+                              <span className="typing-indicator" aria-label="Thinking">
+                                <span /><span /><span />
+                              </span>
+                            ) : null
+                          ) : (
+                            msg.text
+                          )}
+                        </div>
+                      </article>
+                      {msg.text && !(editingMessage?.chatId === activeChat?.id && editingMessage?.index === index) && (
+                        <div className="message-actions">
+                          <button
+                            type="button"
+                            onClick={() => copyText(msg.text, 'Message copied')}
+                            aria-label="Copy message"
+                            data-tooltip="Copy message"
+                          >
+                            <Copy size={15} />
+                          </button>
+                          {msg.sender === 'user' && !isStreaming && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!activeChat?.id) return
+                                setEditingMessage({ chatId: activeChat.id, index, originalText: msg.text, draft: msg.text })
+                              }}
+                              aria-label="Edit message"
+                              data-tooltip="Edit message"
+                            >
+                              <Pencil size={15} />
+                            </button>
+                          )}
+                          {msg.sender === 'ai' && index === messages.length - 1 && !isStreaming && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const lastUserIndex = messages
+                                  .slice(0, index)
+                                  .map((item) => item.sender)
+                                  .lastIndexOf('user')
+                                if (lastUserIndex < 0 || !activeChat?.id) return
+                                const retryText = messages[lastUserIndex].text
+                                updateChatMessages(activeChat.id, (previous) => previous.slice(0, lastUserIndex))
+                                sendMessage(retryText)
+                              }}
+                              aria-label="Try again"
+                              data-tooltip="Try again"
+                            >
+                              <RotateCcw size={15} />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -1482,7 +1488,7 @@ function WorkspaceApp() {
               className="composer-plus-button"
               onClick={() => showComingSoon('Attachments')}
               aria-label="Add attachment — coming soon"
-              // title="Add attachment (Coming Soon)"
+            // title="Add attachment (Coming Soon)"
             >
               <Plus size={19} />
             </button>
@@ -1675,33 +1681,33 @@ function App() {
     return (
       <div className="siva-auth-page">
         <div className="siva-auth-stack">
-        <SignIn
-          routing="hash"
-          oauthFlow="redirect"
-          signUpUrl="/sign-up"
-          fallbackRedirectUrl="/"
-          signUpFallbackRedirectUrl="/"
-          appearance={{
-            variables: {
-              colorPrimary: '#2563eb',
-              colorBackground: 'var(--siva-auth-card, #ffffff)',
-              colorText: 'var(--siva-auth-text, #172033)',
-              colorTextSecondary: 'var(--siva-auth-muted, #64748b)',
-              colorInputBackground: 'var(--siva-auth-card, #ffffff)',
-              colorInputText: 'var(--siva-auth-text, #172033)',
-              borderRadius: '12px',
-              fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
-            },
-            elements: {
-              card: 'siva-clerk-card',
-              headerTitle: 'siva-clerk-title',
-              formButtonPrimary: 'siva-clerk-primary-button',
-              footerAction: 'siva-clerk-footer-action',
-              footerActionLink: 'siva-clerk-footer-action-link',
-              footerPages: 'siva-clerk-footer-pages',
-            },
-          }}
-        />
+          <SignIn
+            routing="hash"
+            oauthFlow="redirect"
+            signUpUrl="/sign-up"
+            fallbackRedirectUrl="/"
+            signUpFallbackRedirectUrl="/"
+            appearance={{
+              variables: {
+                colorPrimary: '#2563eb',
+                colorBackground: 'var(--siva-auth-card, #ffffff)',
+                colorText: 'var(--siva-auth-text, #172033)',
+                colorTextSecondary: 'var(--siva-auth-muted, #64748b)',
+                colorInputBackground: 'var(--siva-auth-card, #ffffff)',
+                colorInputText: 'var(--siva-auth-text, #172033)',
+                borderRadius: '12px',
+                fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+              },
+              elements: {
+                card: 'siva-clerk-card',
+                headerTitle: 'siva-clerk-title',
+                formButtonPrimary: 'siva-clerk-primary-button',
+                footerAction: 'siva-clerk-footer-action',
+                footerActionLink: 'siva-clerk-footer-action-link',
+                footerPages: 'siva-clerk-footer-pages',
+              },
+            }}
+          />
           <p className="siva-auth-switch">
             Don’t have an account? <a href="/sign-up">Sign up</a>
           </p>
@@ -1714,33 +1720,33 @@ function App() {
     return (
       <div className="siva-auth-page">
         <div className="siva-auth-stack">
-        <SignUp
-          routing="hash"
-          oauthFlow="redirect"
-          signInUrl="/sign-in"
-          fallbackRedirectUrl="/"
-          signInFallbackRedirectUrl="/"
-          appearance={{
-            variables: {
-              colorPrimary: '#2563eb',
-              colorBackground: 'var(--siva-auth-card, #ffffff)',
-              colorText: 'var(--siva-auth-text, #172033)',
-              colorTextSecondary: 'var(--siva-auth-muted, #64748b)',
-              colorInputBackground: 'var(--siva-auth-card, #ffffff)',
-              colorInputText: 'var(--siva-auth-text, #172033)',
-              borderRadius: '12px',
-              fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
-            },
-            elements: {
-              card: 'siva-clerk-card',
-              headerTitle: 'siva-clerk-title',
-              formButtonPrimary: 'siva-clerk-primary-button',
-              footerAction: 'siva-clerk-footer-action',
-              footerActionLink: 'siva-clerk-footer-action-link',
-              footerPages: 'siva-clerk-footer-pages',
-            },
-          }}
-        />
+          <SignUp
+            routing="hash"
+            oauthFlow="redirect"
+            signInUrl="/sign-in"
+            fallbackRedirectUrl="/"
+            signInFallbackRedirectUrl="/"
+            appearance={{
+              variables: {
+                colorPrimary: '#2563eb',
+                colorBackground: 'var(--siva-auth-card, #ffffff)',
+                colorText: 'var(--siva-auth-text, #172033)',
+                colorTextSecondary: 'var(--siva-auth-muted, #64748b)',
+                colorInputBackground: 'var(--siva-auth-card, #ffffff)',
+                colorInputText: 'var(--siva-auth-text, #172033)',
+                borderRadius: '12px',
+                fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+              },
+              elements: {
+                card: 'siva-clerk-card',
+                headerTitle: 'siva-clerk-title',
+                formButtonPrimary: 'siva-clerk-primary-button',
+                footerAction: 'siva-clerk-footer-action',
+                footerActionLink: 'siva-clerk-footer-action-link',
+                footerPages: 'siva-clerk-footer-pages',
+              },
+            }}
+          />
           <p className="siva-auth-switch">
             Already have an account? <a href="/sign-in">Sign in</a>
           </p>

@@ -2658,3 +2658,176 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
   background: transparent;
   color: var(--text-primary, #f4f4f5);
 }
+
+
+
+
+
+/* =========================================
+   MOBILE NAVIGATION — SIVA AI
+   ========================================= */
+
+/* Hidden on desktop and larger screens */
+.mobile-nav-toggle {
+  display: none;
+}
+
+/* -----------------------------------------
+   PHONE PORTRAIT
+   Sidebar overlays chat without shifting it
+   ----------------------------------------- */
+@media (max-width: 700px) and (orientation: portrait) {
+  .app {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  /* Navigation toggle button */
+  .app .mobile-nav-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 1002;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--border-color, rgba(128, 128, 128, 0.25));
+    border-radius: 12px;
+    background: var(--bg-secondary, #fff);
+    color: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .app .mobile-nav-toggle:focus-visible {
+    outline: 2px solid var(--accent-color, #6366f1);
+    outline-offset: 2px;
+  }
+
+  /* Sidebar is removed from the layout flow */
+  .app .app-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 1001;
+    width: min(290px, 85vw) !important;
+    min-width: 0 !important;
+    max-width: 85vw;
+    height: 100vh;
+    height: 100dvh;
+    box-sizing: border-box;
+    flex: none !important;
+    overflow-x: hidden;
+    overflow-y: auto;
+    transform: translateX(-105%);
+    transition: transform 220ms ease;
+    will-change: transform;
+  }
+
+  /* Open sidebar when the existing navigation state is expanded */
+  .app.sidebar-open .app-sidebar {
+    transform: translateX(0);
+  }
+
+  /* Chat always occupies the full available width */
+  .app .main-workspace {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .app .chat-box {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Prevent wide content from stretching the phone layout */
+  .app .messages-container,
+  .app .messages-content,
+  .app .input-area {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .app .messages-content,
+  .app .message-body {
+    overflow-wrap: anywhere;
+  }
+
+  .app .input-area textarea {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+/* -----------------------------------------
+   PHONE LANDSCAPE
+   Keep the narrow navigation icon rail visible
+   ----------------------------------------- */
+@media (max-width: 700px) and (orientation: landscape) {
+  .app {
+    overflow: hidden;
+  }
+
+  .app .mobile-nav-toggle {
+    display: none;
+  }
+
+  .app .app-sidebar {
+    position: relative;
+    inset: auto;
+    height: 100%;
+    width: 62px !important;
+    min-width: 62px !important;
+    max-width: 62px;
+    flex: 0 0 62px !important;
+    transform: none;
+    transition: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .app .main-workspace {
+    min-width: 0;
+    max-width: 100%;
+    flex: 1 1 0;
+  }
+
+  .app .chat-box {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Keep icons; hide sidebar text and history */
+  .app .app-sidebar .brand-copy,
+  .app .app-sidebar .brand-collapse-icon,
+  .app .app-sidebar .sidebar-new-chat span,
+  .app .app-sidebar .nav-label,
+  .app .app-sidebar .history-section,
+  .app .app-sidebar .account-copy,
+  .app .app-sidebar .account-trigger > svg {
+    display: none !important;
+  }
+
+  .app .app-sidebar .brand-header,
+  .app .app-sidebar .sidebar-new-chat,
+  .app .app-sidebar .nav-rail-item,
+  .app .app-sidebar .account-trigger {
+    justify-content: center;
+    min-width: 0;
+  }
+}
+
+/* Respect reduced-motion accessibility preferences */
+@media (prefers-reduced-motion: reduce) {
+  .app .app-sidebar {
+    transition: none !important;
+  }
+}
