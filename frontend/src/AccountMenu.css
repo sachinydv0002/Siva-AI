@@ -658,3 +658,54 @@
   background: #b91c1c;
   border-color: #f87171;
 }
+
+/* Saved Memory custom scrollbar */
+.saved-memory-list {
+  scrollbar-width: thin;
+  scrollbar-color: #64748b transparent;
+}
+
+.saved-memory-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.saved-memory-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.saved-memory-list::-webkit-scrollbar-thumb {
+  background: #64748b;
+  border-radius: 10px;
+}
+
+.saved-memory-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Saved Memory buttons - Light mode visibility fix */
+:root[data-theme="light"] .saved-memory-item .delete-confirm {
+  color: #b91c1c !important;
+  background: #fff1f2 !important;
+  border: 1px solid #fda4af !important;
+  opacity: 1 !important;
+}
+
+:root[data-theme="light"] .saved-memory-item .delete-confirm:hover,
+:root[data-theme="light"] .saved-memory-item .delete-confirm:focus-visible {
+  color: #ffffff !important;
+  background: #b91c1c !important;
+  border-color: #991b1b !important;
+}
+
+/* Saved Memory dialog action buttons */
+:root[data-theme="light"] .saved-memory-dialog .rename-dialog-actions button {
+  color: #334155;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  opacity: 1;
+}
+
+:root[data-theme="light"] .saved-memory-dialog .rename-dialog-actions button:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
