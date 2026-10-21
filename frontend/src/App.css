@@ -3445,3 +3445,81 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
   }
   .app:has(.input-area textarea:focus) .welcome > p { max-width: 92% !important; font-size: 14px !important; line-height: 1.35 !important; }
 }
+
+
+/* =========================================
+   FINAL FIX: Compact suggestions + no subtitles
+   ========================================= */
+
+/* Suggestions: heading only */
+.prompt-card small {
+  display: none !important;
+}
+
+/* Compact suggestion cards */
+.prompt-card {
+  min-height: 38px !important;
+  height: 38px !important;
+  padding: 0 10px !important;
+  gap: 8px !important;
+  border-radius: 9px !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+}
+
+.prompt-card > span {
+  display: block !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.prompt-card strong {
+  display: block !important;
+  margin: 0 !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.prompt-card > svg {
+  flex: 0 0 15px !important;
+  width: 15px !important;
+  height: 15px !important;
+}
+
+/* BEU and Interview: compact single-column grid on desktop,
+   retaining the existing 2-3-2 row placement */
+@media (min-width: 701px) {
+  .welcome.beu-welcome .prompt-cards,
+  .welcome.interview-welcome .prompt-cards {
+    row-gap: 5px !important;
+  }
+
+  .welcome.beu-welcome .prompt-card,
+  .welcome.interview-welcome .prompt-card {
+    min-height: 38px !important;
+    height: 38px !important;
+  }
+}
+
+/* Mobile: suggestions remain stacked vertically */
+@media (max-width: 700px) {
+  .app .welcome .prompt-card {
+    min-height: 42px !important;
+    height: 42px !important;
+    padding: 0 11px !important;
+    gap: 9px !important;
+  }
+
+  .app .welcome .prompt-card strong {
+    font-size: 12px !important;
+    white-space: nowrap !important;
+  }
+
+  .app .welcome .prompt-card small {
+    display: none !important;
+  }
+}

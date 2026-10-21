@@ -735,7 +735,6 @@ function WorkspaceApp() {
     scrollTopRef.current = 0
     hasRestoredScrollRef.current = true
     shouldAutoScrollRef.current = true
-    window.requestAnimationFrame(() => textareaRef.current?.focus())
   }
 
   function handleSelectChat(chatId) {
@@ -761,7 +760,6 @@ function WorkspaceApp() {
 
     window.requestAnimationFrame(() => {
       scrollToBottom('auto')
-      textareaRef.current?.focus()
     })
   }
 
