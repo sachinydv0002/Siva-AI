@@ -3843,3 +3843,33 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
     z-index: 1100 !important;
   }
 }
+
+/* Phone only: keep sidebar navigation controls aligned to the left. */
+@media (max-width: 700px) {
+  .app .app-sidebar .sidebar-top,
+  .app .app-sidebar .nav-menu {
+    align-items: stretch !important;
+  }
+
+  .app .app-sidebar .sidebar-new-chat,
+  .app .app-sidebar .nav-rail-item {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    padding-left: 18px !important;
+    padding-right: 14px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .app .app-sidebar .sidebar-new-chat > svg,
+  .app .app-sidebar .nav-rail-item > svg {
+    flex: 0 0 24px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .app .app-sidebar .nav-label {
+    text-align: left !important;
+  }
+}
