@@ -983,7 +983,7 @@ function WorkspaceApp() {
           onFocus={(event) => showSidebarTooltip(event, isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar')}
           onBlur={() => setSidebarTooltip(null)}
         >
-          {isNavExpanded ? (
+          {(isNavExpanded || mobileNavOpen) ? (
             <>
               <span className="brand-logo" aria-label="Siva AI trishul logo">
                 <TrishulMark size={25} strokeWidth={2} />
@@ -1279,35 +1279,6 @@ function WorkspaceApp() {
       </aside>
 
       <main className="main-workspace">
-        {isLoaded && !isSignedIn && messages.length === 0 && (
-          <a
-            href="/sign-in"
-            className="guest-sign-in-button"
-            style={{
-              position: 'absolute',
-              top: 16,
-              right: 18,
-              zIndex: 20,
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 7,
-              minHeight: 38,
-              padding: '0 16px',
-              border: '1px solid var(--border, rgba(128,128,128,.28))',
-              borderRadius: 999,
-              background: 'var(--panel, #fff)',
-              color: 'var(--text, #172033)',
-              fontSize: 14,
-              fontWeight: 600,
-              textDecoration: 'none',
-              boxShadow: '0 2px 10px rgba(0,0,0,.08)',
-            }}
-          >
-            <LogIn size={16} />
-            Sign in
-          </a>
-        )}
         <button
           type="button"
           className="mobile-nav-toggle"
@@ -1422,6 +1393,12 @@ function WorkspaceApp() {
                         </button>
                         <button type="button" className="prompt-card" onClick={() => sendMessage('Explain a difficult topic in simple English with a small example, then ask me one question to check my understanding.')}>
                           <GraduationCap size={18} /><span><strong>Explain a topic</strong><small>Simple explanation with example</small></span>
+                        </button>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Help me write, improve, or debug a Python program. First ask what I want the program to do, then explain the solution step by step.')}>
+                          <Code2 size={18} /><span><strong>Python help</strong><small>Write, understand or debug code</small></span>
+                        </button>
+                        <button type="button" className="prompt-card" onClick={() => sendMessage('Help me prepare for an upcoming exam. Ask for my subject, exam date, syllabus progress, and daily available study time, then create a practical revision plan.')}>
+                          <GraduationCap size={18} /><span><strong>Exam study plan</strong><small>Prepare with focused revision</small></span>
                         </button>
                       </>
                     )}
