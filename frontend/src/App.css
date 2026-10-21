@@ -2913,3 +2913,27 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
   .app.mobile-keyboard-open .welcome p { margin-bottom: 8px !important; }
   .app .main-workspace { touch-action: pan-y; }
 }
+
+/* Final mobile-only corrections: compact welcome, keyboard-aware viewport and swipe gestures. */
+@media (max-width: 700px) and (orientation: portrait) {
+  .app { height: var(--mobile-viewport-height, 100dvh) !important; min-height: 0 !important; }
+  .app .main-workspace, .app .chat-box { height: 100% !important; min-height: 0 !important; }
+  .app .messages-container { min-height: 0 !important; flex: 1 1 0 !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; }
+  .app .welcome { min-height: 100%; justify-content: center !important; padding: 18px 0 24px !important; box-sizing: border-box; }
+  .app .welcome-brand-mark { flex-shrink: 0; }
+  .app .welcome h1, .app .welcome p { flex-shrink: 0; }
+  /* Keep only five cards on all three welcome pages. */
+  .app .prompt-cards { display: flex !important; flex-direction: column !important; gap: 8px !important; align-items: stretch !important; width: min(100%, 420px) !important; margin-inline: auto; }
+  .app .prompt-card:nth-child(n + 6) { display: none !important; }
+  .app .prompt-card { min-height: 46px !important; padding: 9px 12px !important; width: 100% !important; flex: 0 0 auto !important; }
+  .app .prompt-card strong { white-space: normal !important; overflow-wrap: break-word !important; word-break: normal !important; }
+  /* Keyboard open: hide cards but keep the logo, title and subtitle centered in visible space. */
+  .app.mobile-keyboard-open .messages-container { overflow-y: auto !important; }
+  .app.mobile-keyboard-open .messages-content { min-height: 100%; display: flex; flex-direction: column; justify-content: center; }
+  .app.mobile-keyboard-open .welcome { min-height: 100% !important; height: 100% !important; justify-content: center !important; padding: 8px 0 !important; }
+  .app.mobile-keyboard-open .welcome-brand-mark { margin: 0 auto 8px !important; }
+  .app.mobile-keyboard-open .welcome h1 { margin: 0 0 6px !important; font-size: clamp(23px, 6vw, 29px) !important; }
+  .app.mobile-keyboard-open .welcome p { margin: 0 8px !important; font-size: 15px !important; line-height: 1.35 !important; }
+  .app.mobile-keyboard-open .prompt-cards { display: none !important; }
+  .app .mobile-nav-toggle { touch-action: manipulation; }
+}

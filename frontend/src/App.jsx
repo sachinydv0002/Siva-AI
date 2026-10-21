@@ -209,28 +209,6 @@ function WorkspaceApp() {
   const activeChatIdRef = useRef(initialAppState?.activeChatId ?? initialAppState?.chats?.[0]?.id ?? null)
   const chatsRef = useRef(initialAppState?.chats ?? [])
 
-  // Track the mobile visual viewport so welcome suggestions hide only while the keyboard is open.
-  useEffect(() => {
-    const viewport = window.visualViewport
-    if (!viewport) return
-    const updateKeyboardState = () => {
-      const isMobile = window.matchMedia('(max-width: 700px)').matches
-      const keyboardVisible = isMobile && (window.innerHeight - viewport.height) > 140
-      setMobileKeyboardOpen(keyboardVisible)
-      document.documentElement.classList.toggle('mobile-keyboard-open', keyboardVisible)
-    }
-    updateKeyboardState()
-    viewport.addEventListener('resize', updateKeyboardState)
-    viewport.addEventListener('scroll', updateKeyboardState)
-    window.addEventListener('resize', updateKeyboardState)
-    return () => {
-      viewport.removeEventListener('resize', updateKeyboardState)
-      viewport.removeEventListener('scroll', updateKeyboardState)
-      window.removeEventListener('resize', updateKeyboardState)
-      document.documentElement.classList.remove('mobile-keyboard-open')
-    }
-  }, [])
-
   useEffect(() => {
     chatsRef.current = chats
   }, [chats])
@@ -423,6 +401,36 @@ function WorkspaceApp() {
     return () => {
       abortControllerRef.current?.abort()
       if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current)
+    }
+  }, [])
+
+  // Track the real mobile keyboard/visual viewport so welcome content stays visible.
+  useEffect(() => {
+    const root = document.querySelector('.app')
+    const viewport = window.visualViewport
+    const baselineHeight = { value: window.innerHeight }
+    const updateKeyboardState = () => {
+      const isMobile = window.matchMedia('(max-width: 700px) and (orientation: portrait)').matches
+      const focusedComposer = document.activeElement === textareaRef.current
+      const reducedViewport = viewport ? (baselineHeight.value - viewport.height) > 140 : false
+      const open = isMobile && focusedComposer && reducedViewport
+      setMobileKeyboardOpen(open)
+      if (root && viewport) root.style.setProperty('--mobile-viewport-height', `${Math.round(viewport.height)}px`)
+      if (!focusedComposer && root) root.style.removeProperty('--mobile-viewport-height')
+    }
+    const onFocusIn = (event) => { if (event.target === textareaRef.current) updateKeyboardState() }
+    const onFocusOut = () => window.setTimeout(updateKeyboardState, 80)
+    viewport?.addEventListener('resize', updateKeyboardState)
+    window.addEventListener('resize', updateKeyboardState)
+    document.addEventListener('focusin', onFocusIn)
+    document.addEventListener('focusout', onFocusOut)
+    updateKeyboardState()
+    return () => {
+      viewport?.removeEventListener('resize', updateKeyboardState)
+      window.removeEventListener('resize', updateKeyboardState)
+      document.removeEventListener('focusin', onFocusIn)
+      document.removeEventListener('focusout', onFocusOut)
+      if (root) root.style.removeProperty('--mobile-viewport-height')
     }
   }, [])
 
@@ -925,13 +933,47 @@ function WorkspaceApp() {
   }
 
   return (
-    <div className={`app ${isNavExpanded ? 'sidebar-open' : 'sidebar-closed'} ${mobileNavOpen ? 'mobile-nav-visible' : ''} ${socialOpen ? 'social-popover-open' : ''} ${accountOpen ? 'account-popover-open' : ''} ${mobileKeyboardOpen ? 'mobile-keyboard-open' : ''}`}>
+    <div
+      className={`app ${isNavExpanded ? 'sidebar-open' : 'sidebar-closed'} ${mobileNavOpen ? 'mobile-nav-visible' : ''} ${mobileKeyboardOpen ? 'mobile-keyboard-open' : ''} ${socialOpen ? 'social-popover-open' : ''} ${accountOpen ? 'account-popover-open' : ''}`}
+      onTouchStart={(event) => {
+        const touch = event.touches[0]
+        if (touch) touchStartRef.current = { x: touch.clientX, y: touch.clientY, atTop: messagesContainerRef.current?.scrollTop <= 0 }
+      }}
+      onTouchEnd={(event) => {
+        const start = touchStartRef.current
+        const touch = event.changedTouches[0]
+        if (!start || !touch) return
+        const dx = touch.clientX - start.x
+        const dy = touch.clientY - start.y
+        const isMobile = window.matchMedia('(max-width: 700px) and (orientation: portrait)').matches
+        if (isMobile && start.x <= 24 && dx > 70 && Math.abs(dy) < 70 && !mobileNavOpen) {
+          setMobileNavOpen(true)
+          setSocialOpen(false)
+          setAccountOpen(false)
+        } else if (isMobile && mobileNavOpen && dx < -70 && Math.abs(dy) < 70) {
+          setMobileNavOpen(false)
+          setSocialOpen(false)
+          setAccountOpen(false)
+        } else if (isMobile && start.atTop && dy > 110 && Math.abs(dx) < 60 && !mobileNavOpen && !mobileKeyboardOpen) {
+          window.location.reload()
+        }
+        touchStartRef.current = null
+      }}
+    >
       <aside className="app-sidebar glass" aria-label="Siva AI sidebar" ref={sidebarRef}>
         <button
           type="button"
           className={`brand-header brand-toggle ${isNavExpanded ? 'expanded' : 'collapsed'}`}
-          onClick={toggleNav}
-          data-tooltip={isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+          onClick={() => {
+            if (mobileNavOpen) {
+              setMobileNavOpen(false)
+              setSocialOpen(false)
+              setAccountOpen(false)
+              return
+            }
+            toggleNav()
+          }}
+          data-tooltip={mobileNavOpen ? 'Close navigation' : isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
           aria-label={isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
           onMouseEnter={(event) => showSidebarTooltip(event, isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar')}
           onMouseLeave={() => setSidebarTooltip(null)}
@@ -1233,17 +1275,7 @@ function WorkspaceApp() {
         </div>
       </aside>
 
-      <main
-        className="main-workspace"
-        onTouchStart={(event) => { touchStartRef.current = { x: event.touches[0].clientX, y: event.touches[0].clientY } }}
-        onTouchEnd={(event) => {
-          if (!touchStartRef.current) return
-          const dx = event.changedTouches[0].clientX - touchStartRef.current.x
-          const dy = event.changedTouches[0].clientY - touchStartRef.current.y
-          if (touchStartRef.current.x < 28 && dx > 65 && Math.abs(dy) < 90 && window.matchMedia('(max-width: 700px) and (orientation: portrait)').matches) setMobileNavOpen(true)
-          touchStartRef.current = null
-        }}
-      >
+      <main className="main-workspace">
         <button
           type="button"
           className="mobile-nav-toggle"
