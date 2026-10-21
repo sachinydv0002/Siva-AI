@@ -167,6 +167,8 @@ function WorkspaceApp() {
   const [isNavExpanded, setIsNavExpanded] = useState(getSavedSidebarState)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [mobileKeyboardOpen, setMobileKeyboardOpen] = useState(false)
+  const [pullRefreshProgress, setPullRefreshProgress] = useState(0)
+  const [isPullRefreshing, setIsPullRefreshing] = useState(false)
   const touchStartRef = useRef(null)
   const [theme, setTheme] = useState(() => {
     try {
@@ -939,6 +941,16 @@ function WorkspaceApp() {
         const touch = event.touches[0]
         if (touch) touchStartRef.current = { x: touch.clientX, y: touch.clientY, atTop: messagesContainerRef.current?.scrollTop <= 0 }
       }}
+      onTouchMove={(event) => {
+        const start = touchStartRef.current
+        const touch = event.touches[0]
+        if (!start || !touch || mobileNavOpen || mobileKeyboardOpen || isPullRefreshing) return
+        const dy = touch.clientY - start.y
+        const isMobile = window.matchMedia('(max-width: 700px) and (orientation: portrait)').matches
+        if (isMobile && start.atTop && start.y < 100 && dy > 0 && Math.abs(touch.clientX - start.x) < 45) {
+          setPullRefreshProgress(Math.min(1, dy / 110))
+        }
+      }}
       onTouchEnd={(event) => {
         const start = touchStartRef.current
         const touch = event.changedTouches[0]
@@ -948,18 +960,30 @@ function WorkspaceApp() {
         const isMobile = window.matchMedia('(max-width: 700px) and (orientation: portrait)').matches
         if (isMobile && start.x <= 24 && dx > 70 && Math.abs(dy) < 70 && !mobileNavOpen) {
           setMobileNavOpen(true)
+          setPullRefreshProgress(0)
           setSocialOpen(false)
           setAccountOpen(false)
         } else if (isMobile && mobileNavOpen && dx < -70 && Math.abs(dy) < 70) {
           setMobileNavOpen(false)
+          setPullRefreshProgress(0)
           setSocialOpen(false)
           setAccountOpen(false)
         } else if (isMobile && start.atTop && dy > 110 && Math.abs(dx) < 60 && !mobileNavOpen && !mobileKeyboardOpen) {
-          window.location.reload()
+          setIsPullRefreshing(true)
+          setPullRefreshProgress(1)
+          window.setTimeout(() => window.location.reload(), 450)
+        } else {
+          setPullRefreshProgress(0)
         }
         touchStartRef.current = null
       }}
     >
+      {pullRefreshProgress > 0 && !mobileKeyboardOpen && (
+        <div className={`pull-refresh-indicator ${isPullRefreshing ? 'refreshing' : ''}`} role="status" aria-live="polite" style={{ '--pull-progress': pullRefreshProgress }}>
+          <span className="pull-refresh-spinner" />
+          <span>{isPullRefreshing ? 'Refreshing…' : 'Pull to refresh'}</span>
+        </div>
+      )}
       <aside className="app-sidebar glass" aria-label="Siva AI sidebar" ref={sidebarRef}>
         <button
           type="button"

@@ -2948,3 +2948,29 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
   .app.mobile-nav-visible .app-sidebar { z-index: 1001 !important; }
   .app .sidebar-bottom .nav-popover { z-index: 10002 !important; }
 }
+
+
+/* Pull-to-refresh indicator and full-screen mobile popovers. */
+.pull-refresh-indicator {
+  position: fixed; top: max(10px, env(safe-area-inset-top)); left: 50%;
+  z-index: 20000; transform: translate(-50%, calc(-8px + var(--pull-progress) * 8px));
+  display: flex; align-items: center; gap: 8px; padding: 9px 14px;
+  border: 1px solid var(--border, rgba(128,128,128,.25)); border-radius: 999px;
+  background: var(--panel, #fff); color: var(--text, #172033);
+  box-shadow: 0 5px 20px rgba(0,0,0,.14); font-size: 12px; white-space: nowrap;
+  opacity: min(1, calc(var(--pull-progress) + .15)); pointer-events: none;
+}
+.pull-refresh-spinner { width: 16px; height: 16px; border: 2px solid currentColor;
+  border-right-color: transparent; border-radius: 50%; transform: rotate(calc(var(--pull-progress) * 300deg));
+}
+.pull-refresh-indicator.refreshing .pull-refresh-spinner { animation: siva-pull-spin .7s linear infinite; }
+@keyframes siva-pull-spin { to { transform: rotate(360deg); } }
+@media (max-width: 700px) {
+  .modal-backdrop { position: fixed !important; z-index: 30000 !important; inset: 0 !important;
+    width: 100vw; height: 100dvh; box-sizing: border-box; isolation: isolate; }
+  .modal-backdrop .rename-dialog { z-index: 30001 !important; max-height: calc(100dvh - 32px); overflow-y: auto; }
+  .app .app-sidebar { isolation: auto; }
+  .app .sidebar-bottom .nav-popover { position: fixed !important; z-index: 30002 !important;
+    left: 12px !important; right: 12px !important; bottom: max(76px, calc(env(safe-area-inset-bottom) + 72px)) !important;
+    top: auto !important; width: auto !important; max-height: min(65dvh, 500px) !important; overflow-y: auto !important; }
+}
