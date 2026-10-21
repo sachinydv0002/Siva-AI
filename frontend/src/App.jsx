@@ -166,6 +166,8 @@ function WorkspaceApp() {
   const [isStreaming, setIsStreaming] = useState(false)
   const [isNavExpanded, setIsNavExpanded] = useState(getSavedSidebarState)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [mobileKeyboardOpen, setMobileKeyboardOpen] = useState(false)
+  const touchStartRef = useRef(null)
   const [theme, setTheme] = useState(() => {
     try {
       const saved = window.localStorage.getItem(THEME_STORAGE_KEY)
@@ -206,6 +208,28 @@ function WorkspaceApp() {
   const shouldAutoScrollRef = useRef(true)
   const activeChatIdRef = useRef(initialAppState?.activeChatId ?? initialAppState?.chats?.[0]?.id ?? null)
   const chatsRef = useRef(initialAppState?.chats ?? [])
+
+  // Track the mobile visual viewport so welcome suggestions hide only while the keyboard is open.
+  useEffect(() => {
+    const viewport = window.visualViewport
+    if (!viewport) return
+    const updateKeyboardState = () => {
+      const isMobile = window.matchMedia('(max-width: 700px)').matches
+      const keyboardVisible = isMobile && (window.innerHeight - viewport.height) > 140
+      setMobileKeyboardOpen(keyboardVisible)
+      document.documentElement.classList.toggle('mobile-keyboard-open', keyboardVisible)
+    }
+    updateKeyboardState()
+    viewport.addEventListener('resize', updateKeyboardState)
+    viewport.addEventListener('scroll', updateKeyboardState)
+    window.addEventListener('resize', updateKeyboardState)
+    return () => {
+      viewport.removeEventListener('resize', updateKeyboardState)
+      viewport.removeEventListener('scroll', updateKeyboardState)
+      window.removeEventListener('resize', updateKeyboardState)
+      document.documentElement.classList.remove('mobile-keyboard-open')
+    }
+  }, [])
 
   useEffect(() => {
     chatsRef.current = chats
@@ -901,21 +925,13 @@ function WorkspaceApp() {
   }
 
   return (
-    <div className={`app ${isNavExpanded ? 'sidebar-open' : 'sidebar-closed'} ${mobileNavOpen ? 'mobile-nav-visible' : ''} ${socialOpen ? 'social-popover-open' : ''} ${accountOpen ? 'account-popover-open' : ''}`}>
+    <div className={`app ${isNavExpanded ? 'sidebar-open' : 'sidebar-closed'} ${mobileNavOpen ? 'mobile-nav-visible' : ''} ${socialOpen ? 'social-popover-open' : ''} ${accountOpen ? 'account-popover-open' : ''} ${mobileKeyboardOpen ? 'mobile-keyboard-open' : ''}`}>
       <aside className="app-sidebar glass" aria-label="Siva AI sidebar" ref={sidebarRef}>
         <button
           type="button"
           className={`brand-header brand-toggle ${isNavExpanded ? 'expanded' : 'collapsed'}`}
-          onClick={() => {
-            if (mobileNavOpen) {
-              setMobileNavOpen(false)
-              setSocialOpen(false)
-              setAccountOpen(false)
-              return
-            }
-            toggleNav()
-          }}
-          data-tooltip={mobileNavOpen ? 'Close navigation' : isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+          onClick={toggleNav}
+          data-tooltip={isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
           aria-label={isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
           onMouseEnter={(event) => showSidebarTooltip(event, isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar')}
           onMouseLeave={() => setSidebarTooltip(null)}
@@ -1217,7 +1233,17 @@ function WorkspaceApp() {
         </div>
       </aside>
 
-      <main className="main-workspace">
+      <main
+        className="main-workspace"
+        onTouchStart={(event) => { touchStartRef.current = { x: event.touches[0].clientX, y: event.touches[0].clientY } }}
+        onTouchEnd={(event) => {
+          if (!touchStartRef.current) return
+          const dx = event.changedTouches[0].clientX - touchStartRef.current.x
+          const dy = event.changedTouches[0].clientY - touchStartRef.current.y
+          if (touchStartRef.current.x < 28 && dx > 65 && Math.abs(dy) < 90 && window.matchMedia('(max-width: 700px) and (orientation: portrait)').matches) setMobileNavOpen(true)
+          touchStartRef.current = null
+        }}
+      >
         <button
           type="button"
           className="mobile-nav-toggle"
