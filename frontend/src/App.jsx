@@ -1000,7 +1000,7 @@ function WorkspaceApp() {
               <div className="history-auth-prompt">
                 <p>{isLoaded
                   ? 'Sign in to save and revisit your chats.'
-                  : 'Sign in to save and revisit your chats. If the sign-in window does not open, check the Clerk publishable key and provider setup.'}</p>
+                  : 'Sign in to save and revisit your chats.'}</p>
                 <a href="/sign-in" className="history-auth-button">Log in</a>
                 <a href="/sign-up" className="history-auth-button secondary">Sign up</a>
               </div>
