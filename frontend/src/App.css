@@ -3674,3 +3674,64 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
     visibility: hidden !important;
   }
 }
+
+/* Phone only: BEU and Interview cards show titles only, without subtitles. */
+@media (max-width: 700px) {
+  .app .welcome.beu-welcome .prompt-cards .prompt-card small,
+  .app .welcome.interview-welcome .prompt-cards .prompt-card small {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+
+/* FINAL FIX: phone BEU + Interview cards are compact title-only rows. */
+@media (max-width: 700px) {
+  .app .welcome.beu-welcome .prompt-cards > button.prompt-card span small,
+  .app .welcome.interview-welcome .prompt-cards > button.prompt-card span small,
+  .app .welcome.beu-welcome .prompt-cards > button.prompt-card small,
+  .app .welcome.interview-welcome .prompt-cards > button.prompt-card small {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+    font-size: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .app .welcome.beu-welcome .prompt-cards > button.prompt-card,
+  .app .welcome.interview-welcome .prompt-cards > button.prompt-card {
+    min-height: 40px !important;
+    height: 40px !important;
+    padding: 0 11px !important;
+    gap: 9px !important;
+    align-items: center !important;
+  }
+
+  .app .welcome.beu-welcome .prompt-cards > button.prompt-card > span,
+  .app .welcome.interview-welcome .prompt-cards > button.prompt-card > span {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    line-height: 1.25 !important;
+  }
+
+  .app .welcome.beu-welcome .prompt-cards > button.prompt-card strong,
+  .app .welcome.interview-welcome .prompt-cards > button.prompt-card strong {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.25 !important;
+  }
+}
