@@ -906,8 +906,16 @@ function WorkspaceApp() {
         <button
           type="button"
           className={`brand-header brand-toggle ${isNavExpanded ? 'expanded' : 'collapsed'}`}
-          onClick={toggleNav}
-          data-tooltip={isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+          onClick={() => {
+            if (mobileNavOpen) {
+              setMobileNavOpen(false)
+              setSocialOpen(false)
+              setAccountOpen(false)
+              return
+            }
+            toggleNav()
+          }}
+          data-tooltip={mobileNavOpen ? 'Close navigation' : isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
           aria-label={isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
           onMouseEnter={(event) => showSidebarTooltip(event, isNavExpanded ? 'Collapse sidebar' : 'Expand sidebar')}
           onMouseLeave={() => setSidebarTooltip(null)}
