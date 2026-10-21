@@ -397,7 +397,7 @@ function WorkspaceApp() {
   }, [isNavExpanded])
 
   useEffect(() => {
-    textareaRef.current?.focus()
+    // Do not open the mobile keyboard automatically on page load or refresh.
     return () => {
       abortControllerRef.current?.abort()
       if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current)

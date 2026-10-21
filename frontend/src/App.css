@@ -3326,3 +3326,63 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
     white-space: normal !important;
   }
 }
+
+
+/* Final mobile welcome behavior: centered initially; compact brand while typing. */
+@media (max-width: 700px) and (orientation: portrait) {
+  .app .messages-content {
+    min-height: 100% !important;
+  }
+
+  .app .welcome {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: auto 0 !important;
+    align-self: stretch !important;
+    text-align: center !important;
+  }
+
+  .app .welcome .welcome-brand-mark,
+  .app .welcome h1,
+  .app .welcome > p {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: center !important;
+  }
+
+  .app .welcome .prompt-cards {
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100% !important;
+    max-width: 420px !important;
+    margin: 16px auto 0 !important;
+  }
+
+  .app .welcome .prompt-card {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+  }
+
+  /* While typing, keep the Siva AI welcome heading centered and hide suggestions. */
+  .app:has(.input-area textarea:focus) .messages-content {
+    justify-content: center !important;
+  }
+
+  .app:has(.input-area textarea:focus) .welcome {
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    margin: auto 0 !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    justify-content: center !important;
+  }
+
+  .app:has(.input-area textarea:focus) .welcome .prompt-cards {
+    display: none !important;
+  }
+
+  .app:has(.input-area textarea:focus) .welcome > p {
+    max-width: 92% !important;
+    font-size: 14px !important;
+    line-height: 1.35 !important;
+  }
+}
