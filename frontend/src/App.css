@@ -3523,3 +3523,109 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
     display: none !important;
   }
 }
+/* =========================================================
+   PHONE-ONLY FINAL OVERRIDES
+   Desktop/laptop layout is intentionally untouched.
+   ========================================================= */
+@media (max-width: 700px) {
+  /* All three welcome screens: exactly five suggestions in one vertical list. */
+  .app .welcome .prompt-cards {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-auto-flow: row !important;
+    gap: 8px !important;
+    width: 100% !important;
+    max-width: 420px !important;
+    margin: 14px auto 0 !important;
+  }
+  .app .welcome .prompt-card {
+    display: flex !important;
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 48px !important;
+    height: auto !important;
+    padding: 10px 13px !important;
+    box-sizing: border-box !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 10px !important;
+    text-align: left !important;
+  }
+  .app .welcome .prompt-card:nth-child(n + 6) { display: none !important; }
+
+  /* Never show the animated typing dots on a phone. */
+  .app .typing-indicator { display: none !important; }
+
+  /* When the composer has focus (mobile keyboard is being used), hide prompts
+     and keep the Siva AI mark/title centered in the available chat space. */
+  .app:has(.input-area textarea:focus) .welcome .prompt-cards { display: none !important; }
+  .app:has(.input-area textarea:focus) .messages-container { overflow-y: auto !important; }
+  .app:has(.input-area textarea:focus) .messages-content {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    min-height: 100% !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    box-sizing: border-box !important;
+  }
+  .app:has(.input-area textarea:focus) .welcome {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    margin: auto 0 !important;
+    padding: 8px 0 !important;
+    align-self: stretch !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+  .app:has(.input-area textarea:focus) .welcome .welcome-brand-mark,
+  .app:has(.input-area textarea:focus) .welcome h1,
+  .app:has(.input-area textarea:focus) .welcome > p {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: center !important;
+  }
+
+  /* Dialogs/settings/saved-memory appear from the top, not the bottom. */
+  .app .modal-backdrop {
+    align-items: start !important;
+    justify-items: center !important;
+    padding: max(12px, env(safe-area-inset-top)) 12px 12px !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
+  }
+  .app .modal-backdrop .rename-dialog {
+    width: 100% !important;
+    max-width: 430px !important;
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top)) !important;
+    overflow-y: auto !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Account/social option popovers open at the top of the phone screen. */
+  .app .sidebar-bottom .nav-popover {
+    position: fixed !important;
+    top: max(12px, env(safe-area-inset-top)) !important;
+    bottom: auto !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top)) !important;
+    overflow-y: auto !important;
+    z-index: 2000 !important;
+  }
+  .app .chat-options-menu {
+    position: fixed !important;
+    top: max(12px, env(safe-area-inset-top)) !important;
+    right: 12px !important;
+    left: auto !important;
+    z-index: 2001 !important;
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top)) !important;
+    overflow-y: auto !important;
+  }
+}
