@@ -165,6 +165,7 @@ function WorkspaceApp() {
   const [editingMessage, setEditingMessage] = useState(null)
   const [isStreaming, setIsStreaming] = useState(false)
   const [isNavExpanded, setIsNavExpanded] = useState(getSavedSidebarState)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [theme, setTheme] = useState(() => {
     try {
       const saved = window.localStorage.getItem(THEME_STORAGE_KEY)
@@ -900,7 +901,7 @@ function WorkspaceApp() {
   }
 
   return (
-    <div className={`app ${isNavExpanded ? 'sidebar-open' : 'sidebar-closed'} ${socialOpen ? 'social-popover-open' : ''} ${accountOpen ? 'account-popover-open' : ''}`}>
+    <div className={`app ${isNavExpanded ? 'sidebar-open' : 'sidebar-closed'} ${mobileNavOpen ? 'mobile-nav-visible' : ''} ${socialOpen ? 'social-popover-open' : ''} ${accountOpen ? 'account-popover-open' : ''}`}>
       <aside className="app-sidebar glass" aria-label="Siva AI sidebar" ref={sidebarRef}>
         <button
           type="button"
@@ -931,9 +932,9 @@ function WorkspaceApp() {
 
         <div className="sidebar-scroll-area">
           <div className="sidebar-top">
-            <button type="button" className={`sidebar-new-chat ${activeView === 'chat' ? 'active' : ''}`} onClick={() => handleNewChat('chat')} data-tooltip="New chat" onMouseEnter={(event) => showSidebarTooltip(event, 'New chat')} onMouseLeave={() => setSidebarTooltip(null)} onFocus={(event) => showSidebarTooltip(event, 'New chat')} onBlur={() => setSidebarTooltip(null)}>
+            <button type="button" className={`sidebar-new-chat ${activeView === 'chat' ? 'active' : ''}`} onClick={() => { handleNewChat('chat'); setMobileNavOpen(false) }} data-tooltip="New chat" onMouseEnter={(event) => showSidebarTooltip(event, 'New chat')} onMouseLeave={() => setSidebarTooltip(null)} onFocus={(event) => showSidebarTooltip(event, 'New chat')} onBlur={() => setSidebarTooltip(null)}>
               <Plus size={18} />
-              {isNavExpanded && <span>New chat</span>}
+              {(isNavExpanded || mobileNavOpen) && <span>New chat</span>}
             </button>
 
             <div className="nav-menu" aria-label="Workspace">
@@ -956,6 +957,7 @@ function WorkspaceApp() {
                     if (label === 'BEU Mode' || label === 'Interview Mode') {
                       // Every mode gets its own fresh chat; never continue the previous conversation.
                       handleNewChat(label === 'BEU Mode' ? 'beu' : 'interview')
+                      setMobileNavOpen(false)
                       setSocialOpen(false)
                       setAccountOpen(false)
                       setSidebarTooltip(null)
@@ -965,14 +967,14 @@ function WorkspaceApp() {
                   }}
                 >
                   <Icon size={19} strokeWidth={1.8} />
-                  {isNavExpanded && <span className="nav-label">{label}</span>}
+                  {(isNavExpanded || mobileNavOpen) && <span className="nav-label">{label}</span>}
                 </button>
               ))}
             </div>
           </div>
 
           <section className="history-section" aria-label="Recent chats">
-            {isNavExpanded && (
+            {(isNavExpanded || mobileNavOpen) && (
               <>
                 <div className="history-heading">
                   <span>Recent chats</span>
@@ -997,7 +999,7 @@ function WorkspaceApp() {
             )}
 
             <div className="history-list">
-              {isNavExpanded && (!isLoaded || !isSignedIn) ? (
+              {(isNavExpanded || mobileNavOpen) && (!isLoaded || !isSignedIn) ? (
                 <div className="history-auth-prompt">
                   <p>{isLoaded
                     ? 'Sign in to save and revisit your chats.'
@@ -1005,7 +1007,7 @@ function WorkspaceApp() {
                   <a href="/sign-in" className="history-auth-button">Log in</a>
                   <a href="/sign-up" className="history-auth-button secondary">Sign up</a>
                 </div>
-              ) : isNavExpanded && (
+              ) : (isNavExpanded || mobileNavOpen) && (
                 filteredChats.length === 0 ? (
                   <p className="empty-history">No matching conversations</p>
                 ) : (
@@ -1014,7 +1016,7 @@ function WorkspaceApp() {
                       <button
                         type="button"
                         className={`chat-history ${chat.id === activeChat?.id ? 'active' : ''}`}
-                        onClick={() => handleSelectChat(chat.id)}
+                        onClick={() => { handleSelectChat(chat.id); setMobileNavOpen(false) }}
                         data-tooltip={chat.title}
                       >
                         {chat.pinned ? <Pin size={14} strokeWidth={1.8} /> : <MessageSquare size={15} strokeWidth={1.7} />}
@@ -1088,7 +1090,7 @@ function WorkspaceApp() {
             onBlur={() => setSidebarTooltip(null)}
           >
             <ExternalLink size={18} />
-            {isNavExpanded && <span className="nav-label">Connect with me</span>}
+            {(isNavExpanded || mobileNavOpen) && <span className="nav-label">Connect with me</span>}
           </button>
 
           {socialOpen && (
@@ -1125,7 +1127,7 @@ function WorkspaceApp() {
             ) : (
               <span className="account-avatar">{isSignedIn ? (accountDisplayName?.charAt(0)?.toUpperCase() || 'S') : <UserRound size={17} />}</span>
             )}
-            {isNavExpanded && (
+            {(isNavExpanded || mobileNavOpen) && (
               <>
                 <span className="account-copy">
                   <strong>{isLoaded && isSignedIn ? accountDisplayName : 'Your account'}</strong>
@@ -1211,11 +1213,19 @@ function WorkspaceApp() {
         <button
           type="button"
           className="mobile-nav-toggle"
-          onClick={toggleNav}
+          onClick={() => setMobileNavOpen(true)}
           aria-label="Open navigation"
         >
           <PanelLeftOpen size={20} />
         </button>
+        {mobileNavOpen && (
+          <button
+            type="button"
+            className="mobile-nav-backdrop"
+            aria-label="Close navigation"
+            onClick={() => setMobileNavOpen(false)}
+          />
+        )}
         <section className="chat-box">
           <div
             className="messages-container"

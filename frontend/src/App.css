@@ -2660,174 +2660,291 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
 }
 
 
+/* MOBILE NAVIGATION + OVERFLOW FIXES — desktop rules above stay unchanged */
+.mobile-nav-toggle,
+.mobile-nav-backdrop { display: none; }
 
-
-
-/* =========================================
-   MOBILE NAVIGATION — SIVA AI
-   ========================================= */
-
-/* Hidden on desktop and larger screens */
-.mobile-nav-toggle {
-  display: none;
-}
-
-/* -----------------------------------------
-   PHONE PORTRAIT
-   Sidebar overlays chat without shifting it
-   ----------------------------------------- */
 @media (max-width: 700px) and (orientation: portrait) {
   .app {
     position: relative;
-    overflow: hidden;
     isolation: isolate;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    min-width: 0;
+    overflow: hidden;
   }
 
-  /* Navigation toggle button */
   .app .mobile-nav-toggle {
     display: flex;
-    align-items: center;
-    justify-content: center;
     position: absolute;
     top: 12px;
     left: 12px;
-    z-index: 1002;
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
     width: 40px;
     height: 40px;
     padding: 0;
-    border: 1px solid var(--border-color, rgba(128, 128, 128, 0.25));
+    border: 1px solid var(--border, rgba(128,128,128,.28));
     border-radius: 12px;
-    background: var(--bg-secondary, #fff);
-    color: inherit;
-    cursor: pointer;
+    background: var(--panel, #fff);
+    color: var(--text, #172033);
+    box-shadow: 0 3px 14px rgba(0,0,0,.12);
     -webkit-tap-highlight-color: transparent;
   }
+  .app.mobile-nav-visible .mobile-nav-toggle { display: none !important; }
 
-  .app .mobile-nav-toggle:focus-visible {
-    outline: 2px solid var(--accent-color, #6366f1);
-    outline-offset: 2px;
+  .app .mobile-nav-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: rgba(0,0,0,.32);
   }
 
-  /* Sidebar is removed from the layout flow */
   .app .app-sidebar {
     position: fixed;
     inset: 0 auto 0 0;
     z-index: 1001;
+    display: flex;
+    flex: 0 0 min(290px, 85vw) !important;
     width: min(290px, 85vw) !important;
     min-width: 0 !important;
     max-width: 85vw;
     height: 100vh;
     height: 100dvh;
     box-sizing: border-box;
-    flex: none !important;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: visible !important;
+    border-radius: 0 14px 14px 0;
     transform: translateX(-105%);
     transition: transform 220ms ease;
     will-change: transform;
   }
+  .app.mobile-nav-visible .app-sidebar { transform: translateX(0) !important; }
 
-  /* Open sidebar when the existing navigation state is expanded */
-  .app.sidebar-open .app-sidebar {
-    transform: translateX(0);
+  .app .sidebar-scroll-area {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .app .sidebar-scroll-area::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
+  .app .sidebar-bottom {
+    position: relative;
+    z-index: 1100;
+    flex: 0 0 auto;
+    isolation: isolate;
   }
 
-  /* Chat always occupies the full available width */
+  /* Menus float above their trigger and remain fully scrollable on short phones. */
+  .app .sidebar-bottom .nav-popover {
+    position: absolute !important;
+    z-index: 1300 !important;
+    left: 8px !important;
+    right: 8px !important;
+    bottom: calc(100% + 8px) !important;
+    top: auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    max-height: min(62dvh, 460px);
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    box-sizing: border-box;
+    border-radius: 14px;
+  }
+  .app .sidebar-bottom .nav-popover a,
+  .app .sidebar-bottom .nav-popover > button {
+    min-height: 42px;
+    box-sizing: border-box;
+  }
+
   .app .main-workspace {
     position: relative;
-    width: 100%;
-    min-width: 0;
-    max-width: 100%;
     flex: 1 1 100%;
-  }
-
-  .app .chat-box {
     width: 100%;
     min-width: 0;
+    min-height: 0;
     max-width: 100%;
-  }
-
-  /* Prevent wide content from stretching the phone layout */
-  .app .messages-container,
-  .app .messages-content,
-  .app .input-area {
-    min-width: 0;
-    max-width: 100%;
-  }
-
-  .app .messages-content,
-  .app .message-body {
-    overflow-wrap: anywhere;
-  }
-
-  .app .input-area textarea {
-    min-width: 0;
-    max-width: 100%;
-  }
-}
-
-/* -----------------------------------------
-   PHONE LANDSCAPE
-   Keep the narrow navigation icon rail visible
-   ----------------------------------------- */
-@media (max-width: 700px) and (orientation: landscape) {
-  .app {
+    height: 100%;
     overflow: hidden;
   }
-
-  .app .mobile-nav-toggle {
-    display: none;
+  .app .chat-box {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    max-width: 100%;
+    height: 100%;
+    padding-left: 10px;
+    padding-right: 10px;
+    overflow: hidden;
+    box-sizing: border-box;
   }
+  .app .messages-container {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    max-width: 100%;
+    overflow-x: hidden !important;
+    overflow-y: auto;
+    overscroll-behavior-x: none;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .app .messages-container::-webkit-scrollbar { display: none; width: 0; height: 0; }
+  .app .messages-content,
+  .app .message-list,
+  .app .message-row,
+  .app .message,
+  .app .message-body {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
+  }
+  .app .code-block-wrap,
+  .app .message-body pre,
+  .app .message-body table { max-width: 100%; }
+  .app .code-block-wrap,
+  .app .message-body pre { overflow-x: auto; }
+  .app .input-area {
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .app .input-area textarea { min-width: 0; max-width: 100%; box-sizing: border-box; }
+}
 
+/* Phone landscape: keep the compact icon rail; do not alter desktop layout. */
+@media (max-width: 700px) and (orientation: landscape) {
+  .app .mobile-nav-toggle,
+  .app .mobile-nav-backdrop { display: none !important; }
   .app .app-sidebar {
     position: relative;
     inset: auto;
-    height: 100%;
+    flex: 0 0 62px !important;
     width: 62px !important;
     min-width: 62px !important;
     max-width: 62px;
-    flex: 0 0 62px !important;
-    transform: none;
+    height: 100%;
+    overflow: visible !important;
+    transform: none !important;
     transition: none;
-    overflow-x: hidden;
-    overflow-y: auto;
   }
-
-  .app .main-workspace {
-    min-width: 0;
-    max-width: 100%;
-    flex: 1 1 0;
-  }
-
-  .app .chat-box {
-    width: 100%;
-    min-width: 0;
-    max-width: 100%;
-  }
-
-  /* Keep icons; hide sidebar text and history */
+  .app .main-workspace { flex: 1 1 0; width: auto; min-width: 0; max-width: 100%; }
   .app .app-sidebar .brand-copy,
   .app .app-sidebar .brand-collapse-icon,
   .app .app-sidebar .sidebar-new-chat span,
   .app .app-sidebar .nav-label,
   .app .app-sidebar .history-section,
   .app .app-sidebar .account-copy,
-  .app .app-sidebar .account-trigger > svg {
-    display: none !important;
-  }
-
+  .app .app-sidebar .account-trigger > svg { display: none !important; }
   .app .app-sidebar .brand-header,
   .app .app-sidebar .sidebar-new-chat,
   .app .app-sidebar .nav-rail-item,
-  .app .app-sidebar .account-trigger {
-    justify-content: center;
-    min-width: 0;
-  }
+  .app .app-sidebar .account-trigger { justify-content: center; min-width: 0; }
 }
 
-/* Respect reduced-motion accessibility preferences */
 @media (prefers-reduced-motion: reduce) {
-  .app .app-sidebar {
-    transition: none !important;
+  .app .app-sidebar { transition: none !important; }
+}
+
+/* Mobile keyboard + keep the desktop 2-3-2 suggestion arrangement on phones. */
+@media (max-width: 700px) and (orientation: portrait) {
+  .app .chat-box {
+    min-height: 0;
+    height: 100%;
+  }
+
+  .app .messages-container {
+    min-height: 0;
+    overflow-y: auto;
+    scroll-padding-block: 12px;
+  }
+
+  /* When the keyboard opens, the welcome content becomes scrollable instead
+     of being vertically centered/clipped above the composer. */
+  .app:has(.input-area textarea:focus) .messages-container {
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain;
+  }
+
+  .app:has(.input-area textarea:focus) .welcome {
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    justify-content: flex-start !important;
+    padding-top: 8px !important;
+    padding-bottom: 14px !important;
+  }
+
+  .app:has(.input-area textarea:focus) .welcome-brand-mark {
+    width: 38px;
+    height: 38px;
+    margin-bottom: 8px;
+  }
+
+  .app:has(.input-area textarea:focus) .welcome h1 {
+    font-size: clamp(22px, 6vw, 28px);
+    line-height: 1.15;
+  }
+
+  .app:has(.input-area textarea:focus) .welcome p {
+    margin: 7px 0 12px;
+    line-height: 1.35;
+  }
+
+  /* Seven cards: two, then three, then two — matching desktop. */
+  .app .welcome .prompt-cards {
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    gap: 6px !important;
+  }
+
+  .app .welcome .prompt-card:nth-child(1) { grid-column: 2 / span 2 !important; grid-row: 1 !important; }
+  .app .welcome .prompt-card:nth-child(2) { grid-column: 4 / span 2 !important; grid-row: 1 !important; }
+  .app .welcome .prompt-card:nth-child(3) { grid-column: 1 / span 2 !important; grid-row: 2 !important; }
+  .app .welcome .prompt-card:nth-child(4) { grid-column: 3 / span 2 !important; grid-row: 2 !important; }
+  .app .welcome .prompt-card:nth-child(5) { grid-column: 5 / span 2 !important; grid-row: 2 !important; }
+  .app .welcome .prompt-card:nth-child(6) { grid-column: 2 / span 2 !important; grid-row: 3 !important; }
+  .app .welcome .prompt-card:nth-child(7) { grid-column: 4 / span 2 !important; grid-row: 3 !important; }
+
+  .app .welcome .prompt-card {
+    display: flex !important;
+    min-width: 0 !important;
+    min-height: 54px !important;
+    height: auto !important;
+    padding: 7px 6px !important;
+    gap: 5px !important;
+    box-sizing: border-box;
+  }
+
+  .app .welcome .prompt-card > svg { flex: 0 0 auto; width: 15px; height: 15px; }
+  .app .welcome .prompt-card > span { min-width: 0; }
+  .app .welcome .prompt-card strong {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: 10px;
+    line-height: 1.2;
+  }
+  .app .welcome .prompt-card small {
+    display: none;
   }
 }
