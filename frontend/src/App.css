@@ -3831,7 +3831,7 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
     width: 100% !important;
     margin: auto 0 !important;
     transform: translateY(0) !important;
-    transform: translateY(70px) !important;
+    transform: translateY(120px) !important;
     align-self: center !important;
   }
 
