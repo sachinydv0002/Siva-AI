@@ -3874,8 +3874,7 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
   }
 }
 
-
-/* Mobile only: hide all hover-title tooltips */
+/* Mobile only: hide hover tooltips, preserve feature popups */
 @media (hover: none) and (pointer: coarse) {
   [data-tooltip]::before,
   [data-tooltip]::after,
@@ -3885,8 +3884,7 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
     content: none !important;
   }
 
-  .siva-floating-tooltip,
-  [role="tooltip"] {
+  .siva-floating-tooltip {
     display: none !important;
     visibility: hidden !important;
     opacity: 0 !important;
