@@ -3800,7 +3800,7 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
    Existing chat scrolling remains untouched. */
 @media (max-width: 700px) {
   .app:has(.messages-container .welcome):has(.input-area textarea:focus) .messages-container {
-    position: fixed !important;
+    position: absolute !important;
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
@@ -3837,7 +3837,7 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
 
   .app:has(.messages-container .welcome) .mobile-nav-toggle {
     position: fixed !important;
-    top: max(8px, env(safe-area-inset-top)) !important;
+    top: max(18px, env(safe-area-inset-top)) !important;
     left: 8px !important;
     right: auto !important;
     z-index: 1100 !important;
