@@ -3830,7 +3830,9 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
   flex: 0 0 auto !important;
   width: 100% !important;
   margin: 0 !important;
-  transform: translateY(40px) !important;
+  transform: none !important;
+  position: relative !important;
+  top: 20px !important;
   align-self: center !important;
 }
 
