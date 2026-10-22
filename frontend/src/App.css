@@ -3822,15 +3822,15 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    justify-content: center !important;
-    overflow: hidden !important;
+    justify-content: flex-start !important;
+    overflow-y: auto !important;
   }
 
   .app:has(.messages-container .welcome):has(.input-area textarea:focus) .welcome {
     flex: 0 0 auto !important;
     width: 100% !important;
     margin: auto 0 !important;
-    transform: none !important;
+    transform: translateY(0) !important;
     top: auto !important;
     align-self: center !important;
   }
