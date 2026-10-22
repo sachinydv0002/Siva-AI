@@ -3873,3 +3873,23 @@ body:not([data-theme="light"]) .message-row .inline-message-edit-actions > butto
     text-align: left !important;
   }
 }
+
+
+/* Mobile only: hide all hover-title tooltips */
+@media (hover: none) and (pointer: coarse) {
+  [data-tooltip]::before,
+  [data-tooltip]::after,
+  [title]::before,
+  [title]::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  .siva-floating-tooltip,
+  [role="tooltip"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}
