@@ -1,114 +1,153 @@
-\<div align="center">
+<div align="center">
 
-# 🚀 Siva AI
+# ✨ SIVA AI
 
-### Your Intelligent AI-Powered Personal Assistant
+### Your AI. Your Conversations. Your Intelligence.
 
-**A modern AI chat application powered by Google Gemini, React, FastAPI, Python, and MongoDB.**
+**A modern AI-powered conversational assistant built with React, FastAPI, Google Gemini, and MongoDB.**
 
-\<br/>
+<br/>
 
-\<a href="[https://siva-ai-one.vercel.app/](https://siva-ai-one.vercel.app/)">
-&#x20; \<img src="[https://img.shields.io/badge/🌐\_Live_Website-Visit_Siva_AI-6C63FF?style=for-the-badge](https://img.shields.io/badge/🌐_Live_Website-Visit_Siva_AI-6C63FF?style=for-the-badge)" alt="Live Website"/>
-\</a>
-\<a href="[https://github.com/sachinydv0002/](https://github.com/sachinydv0002/)">
-&#x20; \<img src="[https://img.shields.io/badge/GitHub-View_Projects-181717?style=for-the-badge&logo=github&logoColor=white](https://img.shields.io/badge/GitHub-View_Projects-181717?style=for-the-badge\&logo=github\&logoColor=white)" alt="GitHub"/>
-\</a>
-\<a href="[https://www.youtube.com/@Sachinydv0002-sde](https://www.youtube.com/@Sachinydv0002-sde)">
-&#x20; \<img src="[https://img.shields.io/badge/YouTube-Growth_with_Sachin-FF0000?style=for-the-badge&logo=youtube&logoColor=white](https://img.shields.io/badge/YouTube-Growth_with_Sachin-FF0000?style=for-the-badge\&logo=youtube\&logoColor=white)" alt="YouTube Channel"/>
-\</a>
+<a href="https://siva-ai-one.vercel.app/">
+  <img src="https://img.shields.io/badge/🌐_LIVE_WEBSITE-Visit_Siva_AI-6C63FF?style=for-the-badge" alt="Visit Siva AI Live Website"/>
+</a>
+<a href="https://github.com/sachinydv0002/">
+  <img src="https://img.shields.io/badge/GITHUB-Explore_Projects-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Profile"/>
+</a>
+<a href="https://www.youtube.com/@Sachinydv0002-sde">
+  <img src="https://img.shields.io/badge/YOUTUBE-Growth_with_Sachin-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube Channel"/>
+</a>
 
-\<br/>\<br/>
+<br/><br/>
 
-\<img src="[https://img.shields.io/badge/React-Frontend-61DAFB?style=flat-square&logo=react&logoColor=black](https://img.shields.io/badge/React-Frontend-61DAFB?style=flat-square\&logo=react\&logoColor=black)" alt="React"/>
-\<img src="[https://img.shields.io/badge/Python-Backend-3776AB?style=flat-square&logo=python&logoColor=white](https://img.shields.io/badge/Python-Backend-3776AB?style=flat-square\&logo=python\&logoColor=white)" alt="Python"/>
-\<img src="[https://img.shields.io/badge/FastAPI-REST_API-009688?style=flat-square&logo=fastapi&logoColor=white](https://img.shields.io/badge/FastAPI-REST_API-009688?style=flat-square\&logo=fastapi\&logoColor=white)" alt="FastAPI"/>
-\<img src="[https://img.shields.io/badge/Google_Gemini-AI_Model-4285F4?style=flat-square&logo=googlegemini&logoColor=white](https://img.shields.io/badge/Google_Gemini-AI_Model-4285F4?style=flat-square\&logo=googlegemini\&logoColor=white)" alt="Google Gemini"/>
-\<img src="[https://img.shields.io/badge/MongoDB-Database-47A248?style=flat-square&logo=mongodb&logoColor=white](https://img.shields.io/badge/MongoDB-Database-47A248?style=flat-square\&logo=mongodb\&logoColor=white)" alt="MongoDB"/>
-\<img src="[https://img.shields.io/badge/Deployment-Vercel-000000?style=flat-square&logo=vercel&logoColor=white](https://img.shields.io/badge/Deployment-Vercel-000000?style=flat-square\&logo=vercel\&logoColor=white)" alt="Vercel"/>
+<img src="https://img.shields.io/badge/React-Frontend-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React"/>
+<img src="https://img.shields.io/badge/JavaScript-ES6%2B-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript"/>
+<img src="https://img.shields.io/badge/Python-Backend-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python"/>
+<img src="https://img.shields.io/badge/FastAPI-REST_API-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI"/>
+<img src="https://img.shields.io/badge/Google_Gemini-AI-4285F4?style=flat-square&logo=googlegemini&logoColor=white" alt="Google Gemini"/>
+<img src="https://img.shields.io/badge/MongoDB-Database-47A248?style=flat-square&logo=mongodb&logoColor=white" alt="MongoDB"/>
+<img src="https://img.shields.io/badge/Vercel-Deployment-000000?style=flat-square&logo=vercel&logoColor=white" alt="Vercel"/>
 
-\</div>
+<br/><br/>
+
+**[Open Siva AI ↗](https://siva-ai-one.vercel.app/)**
+
+</div>
 
 ---
 
-## 📌 About the Project
+## 📖 About Siva AI
 
-**Siva AI** is a full-stack conversational AI assistant designed to provide an intuitive and responsive AI chat experience.
+**Siva AI** is a full-stack conversational AI application designed to make interacting with artificial intelligence simple, intuitive, and accessible.
 
-Built using **React, JavaScript, Python, FastAPI, Google Gemini API, and MongoDB**, the application combines a modern frontend with a Python backend to generate AI-powered responses and manage conversation data.
+Powered by Google's Gemini API, Siva AI combines a modern React interface with a Python FastAPI backend and MongoDB for data persistence. The application focuses on natural conversations, convenient chat navigation, conversation history, and a responsive experience across desktop and mobile devices.
 
-Siva AI focuses on a clean user interface, convenient chat navigation, conversation history, and a responsive experience across desktop and mobile devices.
+### 🎯 Project Goals
 
-🔗 **Try it live:** [siva-ai-one.vercel.app](https://siva-ai-one.vercel.app/)
+- Build a clean and intuitive AI chat experience.
+- Integrate Google's Gemini API through a backend service.
+- Support conversation context using available chat history.
+- Store application data using MongoDB.
+- Deliver a responsive interface for desktop and mobile users.
+- Maintain a modular architecture that can grow with new features.
 
 ---
 
 ## ✨ Features
 
-### 🤖 AI-Powered Conversations
+<table>
+<tr>
+<td width="50%" valign="top">
 
-- Generate AI responses using the Google Gemini API.
-- Send messages through an interactive chat interface.
-- Use available conversation context to support follow-up questions.
-- Process AI requests through the backend.
+### 🤖 AI Conversations
 
-### 💬 Modern Chat Interface
+- AI-generated responses using Google Gemini.
+- Interactive conversational interface.
+- Context-aware follow-up conversations using available history.
+- Backend-based AI API integration.
 
-- Clean, responsive chat UI built with React.
+</td>
+<td width="50%" valign="top">
+
+### 💬 Modern Chat UI
+
+- Clean React-based interface.
 - Dedicated new-chat experience.
 - Suggested prompts on the new-chat screen.
-- Message actions and contextual controls where implemented.
-- Responsive layout for desktop and mobile screens.
-- Mobile keyboard-aware layout adjustments.
+- Responsive desktop and mobile layouts.
+- Contextual message controls where implemented.
 
-### 🗂️ Chat History and Saved Memory
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
 
-- Store conversation data in MongoDB.
-- Retrieve recent messages for conversation context.
-- Organize messages by conversation and chat identifiers.
-- Provide a saved-memory interface where implemented.
-- Keep chat history and saved memory as separate concepts.
+### 🧠 Chat History & Memory
 
-### 🎨 User Interface and Navigation
+- MongoDB-based data persistence.
+- Conversation-specific message retrieval.
+- Recent chat history for conversational context.
+- Separate concepts for chat history and saved memory.
+- Saved-memory interface where implemented.
 
+</td>
+<td width="50%" valign="top">
+
+### 📱 Responsive Experience
+
+- Mobile-friendly layout.
+- Keyboard-aware mobile UI adjustments.
 - Sidebar navigation and conversation controls.
-- New-chat workflow.
-- Settings and saved-memory interface where implemented.
-- Contextual menus, notifications, and feature popups.
-- Touch-friendly adjustments for mobile devices.
+- Touch-friendly interactions.
+- Settings and contextual popups where implemented.
 
-### ⚡ Backend and API
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
 
-- Python backend built with FastAPI.
-- Integration with the Google Gemini API.
-- MongoDB persistence where configured.
-- Uvicorn ASGI server.
+### ⚡ Backend & API
+
+- Python and FastAPI backend.
+- Gemini API integration.
+- MongoDB connectivity.
+- Uvicorn application server.
 - Interactive API documentation through Swagger UI.
 
-### 🔌 Modular Architecture
+</td>
+<td width="50%" valign="top">
 
-- Separate frontend and backend layers.
+### 🧩 Modular Architecture
+
+- Separate frontend and backend.
 - Centralized backend integration for AI requests.
-- Extendable structure for future AI tools and personalization.
+- Persistent data storage where configured.
+- Extendable structure for future AI capabilities.
 
-> **Note:** Features and implementation details can vary with the current codebase. Refer to the actual application and backend routes for exact behavior.
+</td>
+</tr>
+</table>
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Technology Stack
 
-| Technology            | Purpose                         |
-| --------------------- | ------------------------------- |
-| **React**             | Frontend UI                     |
-| **JavaScript**        | Frontend functionality          |
-| **CSS**               | Styling and responsive layouts  |
-| **Python**            | Backend development             |
-| **FastAPI**           | Backend REST API                |
-| **Google Gemini API** | AI response generation          |
-| **MongoDB**           | Database and persistent storage |
-| **Uvicorn**           | ASGI application server         |
-| **Git & GitHub**      | Version control                 |
-| **Vercel**            | Frontend hosting, as configured |
+<div align="center">
+
+| Layer | Technology | Role |
+|:---|:---|:---|
+| Frontend | React | User interface |
+| Language | JavaScript | Frontend functionality |
+| Styling | CSS | Layout and responsive design |
+| Backend | Python | Application logic |
+| API Framework | FastAPI | Backend endpoints |
+| AI Integration | Google Gemini API | AI response generation |
+| Database | MongoDB | Persistent data storage |
+| ASGI Server | Uvicorn | Runs the FastAPI application |
+| Version Control | Git & GitHub | Source code management |
+| Frontend Hosting | Vercel | Live frontend deployment |
+
+</div>
 
 ---
 
@@ -116,29 +155,39 @@ Siva AI focuses on a clean user interface, convenient chat navigation, conversat
 
 ```mermaid
 flowchart TD
-    A[User] <--> B[React Frontend]
-    B <--> C[FastAPI Backend]
-    C <--> D[Google Gemini API]
-    C <--> E[(MongoDB)]
-    C --> F[Response Processing]
-    F --> B
+    U([User])
+    UI[React Frontend]
+    API[FastAPI Backend]
+    AI[Google Gemini API]
+    DB[(MongoDB)]
+
+    U <--> UI
+    UI <--> API
+    API <--> AI
+    API <--> DB
+
+    style U fill:#6C63FF,color:#ffffff,stroke:#6C63FF
+    style UI fill:#202938,color:#ffffff,stroke:#61DAFB
+    style API fill:#202938,color:#ffffff,stroke:#009688
+    style AI fill:#202938,color:#ffffff,stroke:#4285F4
+    style DB fill:#202938,color:#ffffff,stroke:#47A248
 ```
 
-### Request Flow
+### 🔄 How It Works
 
-1. The user enters a message in the React interface.
-2. The frontend sends the request to the FastAPI backend.
-3. The backend prepares the request and available conversation context.
+1. The user sends a message through the React frontend.
+2. The frontend forwards the request to the FastAPI backend.
+3. The backend prepares the AI request and available conversation context.
 4. The backend communicates with the Google Gemini API.
-5. MongoDB stores or retrieves conversation data as configured.
-6. The backend returns the response.
+5. MongoDB stores or retrieves conversation data according to the implementation.
+6. The backend returns the generated response.
 7. The frontend displays the response in the chat interface.
 
 ---
 
-## 📁 Project Structure
+## 📂 Project Structure
 
-The following is a representative structure. Actual files and folders may differ in the current repository.
+The structure below represents the expected organization of the application. Actual files may vary.
 
 ```text
 Siva-AI/
@@ -164,32 +213,32 @@ Siva-AI/
 
 ---
 
-## ⚙️ Getting Started
+## 🚀 Getting Started
 
-Follow these steps to run Siva AI locally.
+Follow these steps to set up Siva AI locally.
 
 ### Prerequisites
 
-Make sure you have installed:
+Make sure the following tools are installed:
 
-- Python 3.10 or newer
-- Node.js and npm
-- Git
-- A Google Gemini API key
-- MongoDB or a MongoDB Atlas connection, if required by your backend configuration
+- **Python** — 3.10 or newer
+- **Node.js and npm**
+- **Git**
+- **Google Gemini API key**
+- **MongoDB or MongoDB Atlas**, if required by the backend
 
 ### 1. Clone the Repository
-
-Use your actual repository URL in the command below:
 
 ```bash
 git clone https://github.com/sachinydv0002/Siva-AI.git
 cd Siva-AI
 ```
 
+> Make sure the repository URL and name match your actual GitHub repository.
+
 ### 2. Set Up the Backend
 
-Navigate to the backend folder:
+Navigate to the backend directory:
 
 ```bash
 cd backend
@@ -198,32 +247,32 @@ cd backend
 Create a virtual environment:
 
 ```bash
-python -m venv venv
+python -m venv .venv
 ```
 
 Activate it on Windows PowerShell:
 
 ```powershell
-.\venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
 ```
 
-Install dependencies:
+On macOS or Linux:
+
+```bash
+source .venv/bin/activate
+```
+
+Install the backend dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-On macOS or Linux, activate the virtual environment with:
-
-```bash
-source venv/bin/activate
-```
-
 ### 3. Configure Environment Variables
 
-Create a `.env` file in the backend directory if your application uses environment variables.
+Create a `.env` file inside the backend directory if your backend uses environment variables.
 
-Example configuration:
+Example:
 
 ```env
 GEMINI_API_KEY=your_gemini_api_key
@@ -231,13 +280,14 @@ MONGODB_URI=your_mongodb_connection_string
 DATABASE_NAME=siva_ai
 ```
 
-**Important:**
+**Configuration notes:**
 
-- Use the exact variable names expected by your backend code.
-- The names above are examples and may need to be adjusted.
-- Never upload API keys, database credentials, or private environment files to GitHub.
+- Use the exact variable names expected by your Python code.
+- The variables above are examples; your application may use different names.
+- Keep API keys and database credentials private.
+- Never commit your `.env` file to a public repository.
 
-### 4. Run the Backend
+### 4. Start the Backend
 
 From the backend directory, run:
 
@@ -245,13 +295,13 @@ From the backend directory, run:
 uvicorn app.main:app --reload
 ```
 
-If your FastAPI application uses this module path and the default port, the backend will be available at:
+If your application uses `app.main:app` and the default Uvicorn port, the local endpoints will be:
 
-| Service    | Local Address                 |
-| ---------- | ----------------------------- |
-| API Server | `http://127.0.0.1:8000`       |
-| Swagger UI | `http://127.0.0.1:8000/docs`  |
-| ReDoc      | `http://127.0.0.1:8000/redoc` |
+| Service | Address |
+|:---|:---|
+| Backend API | `http://127.0.0.1:8000` |
+| Swagger UI | `http://127.0.0.1:8000/docs` |
+| ReDoc | `http://127.0.0.1:8000/redoc` |
 
 ### 5. Set Up the Frontend
 
@@ -261,7 +311,7 @@ Open a second terminal and navigate to the frontend directory:
 cd frontend
 ```
 
-Install the dependencies:
+Install dependencies:
 
 ```bash
 npm install
@@ -273,58 +323,56 @@ Start the development server:
 npm run dev
 ```
 
-Open the local URL displayed in your terminal.
+Open the local URL printed in your terminal.
 
-If the frontend requires a backend API URL, configure it using the environment-variable name expected by your frontend code.
+If the frontend requires a backend URL, configure the environment variable expected by the existing frontend code.
 
 ---
 
-## 🔑 Environment Configuration
+## 🔑 Environment Variables
 
-Depending on your implementation, the application may use the following configuration values:
+The backend configuration may include the following values:
 
-| Variable         | Description                              |
-| ---------------- | ---------------------------------------- |
-| `GEMINI_API_KEY` | API key for Google Gemini                |
-| `MONGODB_URI`    | MongoDB connection string                |
-| `DATABASE_NAME`  | MongoDB database name                    |
-| Frontend API URL | Backend API address used by the frontend |
+| Variable | Purpose |
+|:---|:---|
+| `GEMINI_API_KEY` | Authenticates requests to Google Gemini |
+| `MONGODB_URI` | Connects the backend to MongoDB |
+| `DATABASE_NAME` | Selects the MongoDB database |
+| Frontend API URL | Specifies the backend address, if configurable |
 
-Check the existing backend configuration and frontend API client to confirm the exact names and requirements.
+Check the actual code before using these example names.
 
-**Security tip:** Keep private API keys on the backend. Do not expose backend secrets in frontend code or public repositories.
+**Never expose private backend API keys in frontend code.**
 
 ---
 
 ## 🔌 API Documentation
 
-Siva AI uses FastAPI for backend API development.
+Siva AI uses FastAPI to provide backend API functionality.
 
-To explore the available endpoints, start the backend and open:
+After starting the backend, open:
 
-```text
-http://127.0.0.1:8000/docs
-```
+**Swagger UI:** `http://127.0.0.1:8000/docs`
 
-FastAPI's Swagger UI displays the routes, request schemas, and response formats registered by the application.
+The documentation page displays the endpoints and request/response schemas registered by the application.
 
-The actual API endpoints and request fields depend on the current backend implementation.
+The exact routes, request fields, and response formats depend on the current backend implementation.
 
 ---
 
 ## 🗄️ Database
 
-MongoDB is used for persistent data storage where configured.
+MongoDB provides persistent storage where configured.
 
-Depending on the implementation, the database layer can support:
+Depending on the implementation, it can support:
 
-- Chat and message storage.
-- Conversation-based message retrieval.
+- Conversation and message records.
+- Chat-specific message retrieval.
 - Conversation identifiers and ownership.
-- Recent chat context.
+- Recent conversation context.
 - Saved-memory data where implemented.
 
-For production use, configure appropriate database permissions and protect connection credentials.
+For production use, configure appropriate database permissions and secure the connection string.
 
 ---
 
@@ -332,90 +380,108 @@ For production use, configure appropriate database permissions and protect conne
 
 ### Frontend — Vercel
 
-Siva AI's live frontend is available at:
+The live Siva AI frontend is available here:
 
-**[https://siva-ai-one.vercel.app/](https://siva-ai-one.vercel.app/)**
+<div align="center">
+
+<a href="https://siva-ai-one.vercel.app/">
+  <img src="https://img.shields.io/badge/OPEN_SIVA_AI-6C63FF?style=for-the-badge&logo=vercel&logoColor=white" alt="Open Live Siva AI"/>
+</a>
+
+<br/><br/>
+
+**https://siva-ai-one.vercel.app/**
+
+</div>
 
 For future deployments:
 
-1. Push your changes to GitHub.
-2. Open your project in Vercel.
-3. Verify the configured frontend root directory.
-4. Check the build command and output directory against your frontend tooling.
-5. Configure the required environment variables.
-6. Deploy and test the live application.
+1. Push your latest changes to GitHub.
+2. Open the project in Vercel.
+3. Verify the configured root directory.
+4. Confirm the build command and output directory.
+5. Configure the required frontend environment variables.
+6. Deploy the application.
+7. Test the deployed frontend and backend integration.
 
-### Backend Deployment
+### Backend
 
-The FastAPI backend must be hosted separately unless your deployment architecture explicitly combines it with the frontend.
+The FastAPI backend needs a hosting environment that supports Python applications unless your deployment architecture explicitly handles it another way.
 
-For a production backend:
+For a production deployment:
 
-- Configure the required environment variables.
-- Set up the correct CORS origins.
-- Ensure access to MongoDB and the Gemini API.
+- Configure backend environment variables.
+- Set appropriate CORS origins.
+- Verify MongoDB connectivity.
+- Verify Gemini API connectivity.
 - Configure the frontend to use the deployed backend URL.
-- Test API requests and database operations after deployment.
+- Test requests, errors, and persistence.
 
-> **Important:** A deployed frontend does not automatically mean the backend is deployed or connected correctly. Both services must be configured to communicate with each other.
+> **Important:** Frontend and backend deployments are separate unless your infrastructure explicitly combines them.
 
 ---
 
-## 🔐 Security Best Practices
+## 🔐 Security
+
+Follow these practices when developing or deploying Siva AI:
 
 - Keep API keys and database credentials private.
-- Exclude `.env` files from version control.
-- Send Gemini API requests through the backend.
-- Configure CORS for trusted origins.
-- Validate incoming API requests.
+- Exclude `.env` files from Git.
+- Process Gemini API requests through the backend.
+- Configure CORS for trusted frontend origins.
+- Validate incoming requests.
 - Handle API and database errors safely.
-- Use appropriate database access permissions.
-- Avoid logging sensitive data.
-- Keep development and production configuration separate.
+- Use appropriate MongoDB permissions.
+- Avoid logging sensitive information.
+- Keep development and production settings separate.
 
 ---
 
-## 🚀 Future Improvements
+## 🗺️ Future Roadmap
 
-Possible areas for future development include:
+Potential areas for continued development:
 
 - Additional AI capabilities and tools.
 - Improved accessibility and keyboard navigation.
-- More advanced conversation management.
-- Expanded personalization features.
+- Expanded conversation management.
+- Further personalization features.
 - Automated testing and monitoring.
 - Performance optimization.
 - Improved deployment automation.
 
-These items represent potential improvements, not a guarantee that they are already implemented.
-
 ---
 
-## 👨‍💻 Author
+## 👨‍💻 Developer
 
-\<div align="center">
+<div align="center">
 
 ### Sachin Kumar
 
-\<a href="[https://github.com/sachinydv0002/](https://github.com/sachinydv0002/)">
-&#x20; \<img src="[https://img.shields.io/badge/GitHub-sachinydv0002-181717?style=for-the-badge&logo=github&logoColor=white](https://img.shields.io/badge/GitHub-sachinydv0002-181717?style=for-the-badge\&logo=github\&logoColor=white)" alt="GitHub Profile"/>
-\</a>
-\<a href="[https://www.youtube.com/@Sachinydv0002-sde](https://www.youtube.com/@Sachinydv0002-sde)">
-&#x20; \<img src="[https://img.shields.io/badge/YouTube-Growth_with_Sachin-FF0000?style=for-the-badge&logo=youtube&logoColor=white](https://img.shields.io/badge/YouTube-Growth_with_Sachin-FF0000?style=for-the-badge\&logo=youtube\&logoColor=white)" alt="YouTube Channel"/>
-\</a>
+<a href="https://github.com/sachinydv0002/">
+  <img src="https://img.shields.io/badge/GitHub-sachinydv0002-181717?style=for-the-badge&logo=github&logoColor=white" alt="Sachin Kumar on GitHub"/>
+</a>
+<a href="https://www.youtube.com/@Sachinydv0002-sde">
+  <img src="https://img.shields.io/badge/YouTube-Growth_with_Sachin-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Growth with Sachin on YouTube"/>
+</a>
 
-\</div>
+<br/><br/>
+
+**Building Siva AI with React, FastAPI, Google Gemini, and MongoDB.**
+
+</div>
 
 ---
 
-\<div align="center">
+<div align="center">
 
-### 🌟 Explore Siva AI
+### 💜 Experience Siva AI
 
-**[Open Live Website](https://siva-ai-one.vercel.app/)**
+**[🌐 Visit the Live Website](https://siva-ai-one.vercel.app/)**
 
-Built with React, FastAPI, Google Gemini, and MongoDB.
+*Making AI conversations smarter, simpler, and more accessible.*
 
-*Making AI conversations smarter, simpler, and more accessible.* 🚀
+<br/>
 
-\</div>
+<sub>Designed and developed by Sachin Kumar.</sub>
+
+</div>
